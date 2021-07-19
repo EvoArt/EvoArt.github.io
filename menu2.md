@@ -11,4 +11,4 @@
 \toc
 
 
-## [Symbion Network Dynamics](/mymods/Wrep/index.html)
+## [Symbiont Network Dynamics](/mymods/Wrep/index.html)
