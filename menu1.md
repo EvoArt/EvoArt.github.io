@@ -8,10 +8,10 @@ rss = "A short description of the page which would serve as **blurb** in a `RSS`
 
 # The Ecological Detective
 
-These pages won't have much text. All the text is in the book. This is just for implementation (code) details)
+These pages won't have much text. All the text is in the book. This is just for implementation (code) details.
 
 \toc
 
 ## Chapter 1 and 2
 
-There's not a lot of maths here, so I've just included a bit of visualisation to go with [Box 2.1](../ecodetect/box_2_1.html)
+There's not a lot of maths here, so I've just included a bit of visualisation to go with [Box 2.1](/ecodetect/box_2_1/index.html)
