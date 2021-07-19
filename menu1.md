@@ -14,4 +14,4 @@ These pages won't have much text. All the text is in the book. This is just for 
 
 ## Chapter 1 and 2
 
-There's not a lot of maths here, so I've just included a bit of visualisation to go with [Box 2.1](index/ecodetect/box_2_1/)
+There's not a lot of maths here, so I've just included a bit of visualisation to go with [Box 2.1](/ecodetect/box_2_1.html)
