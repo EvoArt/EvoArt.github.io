@@ -25,4 +25,4 @@ show(io, MIME"text/html"(), app)
 println(io, "~~~")
 println(String(take!(io)))
 ```
-
+\output{./code/ex1}
