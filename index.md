@@ -23,5 +23,6 @@ surface(rand(4, 4)) |> fig
 JSServe.Slider(1:3) |> fig
 println(io, "~~~")
 println(String(take!(io)))
+Pkg.activate("..//manual");
 ```
 \textoutput{ex}
