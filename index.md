@@ -9,20 +9,17 @@ Just a random collection of bits n' bobs. Some [solutions to problems](/menu1/) 
 
 Also, this [nonsesense MWE](/MWE/index.html)
 
-```julia:./code/ex1
+```julia:ex
 using WGLMakie, JSServe
+WGLMakie.activate!()
 io = IOBuffer()
+fig(o) = show(io, MIME"text/html"(), o)
 println(io, "~~~")
-show(io, MIME"text/html"(), Page(exportable=true, offline=true))
-app = JSServe.App() do
-    return DOM.div(
-        scatter(1:4),
-        surface(rand(4, 4)),
-        JSServe.Slider(1:3)
-    )
-end
-show(io, MIME"text/html"(), app)
+Page(exportable=true, offline=true) |> fig
+scatter(1:4) |> fig
+surface(rand(4, 4)) |> fig
+JSServe.Slider(1:3) |> fig
 println(io, "~~~")
 println(String(take!(io)))
 ```
-\output{./code/ex1}
+\textoutput{ex}
