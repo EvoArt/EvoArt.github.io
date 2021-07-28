@@ -1,5 +1,10 @@
 [deps]
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 Franklin = "713c75ef-9fc9-4b05-94a9-213340da978e"
 JSServe = "824d6782-a2ef-11e9-3a09-e5662e0c26f9"
 NodeJS = "2bd173c7-0d6d-553b-b6af-13a54713934c"
 WGLMakie = "276b4fcb-3e11-5398-bf8b-a0c2d153d008"
+Weave = "44d3d7a6-8a23-5bf8-98c5-b353f8df5ec9"
