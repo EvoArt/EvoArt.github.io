@@ -10,6 +10,8 @@ Just a random collection of bits n' bobs. Some [solutions to problems](/menu1/) 
 Also, this [nonsesense MWE](/MWE/index.html)
 
 ```julia:ex
+using Pkg
+Pkg.activate(".//_assets//scripts")
 using WGLMakie, JSServe
 WGLMakie.activate!()
 io = IOBuffer()
