@@ -10,8 +10,6 @@ Just a random collection of bits n' bobs. Some [solutions to problems](/menu1/) 
 Also, this [nonsesense MWE](/MWE/index.html)
 
 ```julia:ex
-using Pkg
-Pkg.activate("..//pkgs")
 using WGLMakie, JSServe
 WGLMakie.activate!()
 io = IOBuffer()
@@ -23,6 +21,5 @@ surface(rand(4, 4)) |> fig
 JSServe.Slider(1:3) |> fig
 println(io, "~~~")
 println(String(take!(io)))
-Pkg.activate("..//manual");
 ```
 \textoutput{ex}
