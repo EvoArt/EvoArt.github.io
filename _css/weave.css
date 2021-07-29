@@ -4,7 +4,7 @@ pre.hljl {
     margin: 5px;
     padding: 5px;
     overflow-x: auto;
-    color: #fbfbfb; background-color: rgb(68,68,68); }
+    color: #fbfbfb; background-color: rgb(3,3,3); }
 pre.hljl > span.hljl-t { }
 pre.hljl > span.hljl-w { }
 pre.hljl > span.hljl-e { }
@@ -88,7 +88,7 @@ pre {
   display: block;
   padding: 9.5px;
   margin: 0 0 10px;
-  font-size: 13px;
+  font-size: 9px;
   line-height: 1.42857143;
   word-break: break-all;
   word-wrap: break-word;
@@ -98,7 +98,7 @@ pre {
 pre.hljl {
   margin: 0 0 10px;
   display: block;
-  background: #f5f5f5;
+  background: #1f1e1e;
   border-radius: 4px;
   padding : 5px;
 }
@@ -108,7 +108,7 @@ pre.output {
 }
 
 pre.code {
-  background: #ffffff;
+  background: #1f1e1e;
 }
 
 pre.julia-error {
@@ -120,5 +120,5 @@ kbd,
 pre,
 samp {
   font-family: JuliaMono,Consolas, 'Courier New', monospace;
-  font-size: 0.9em;
+  font-size: 0.7em;
 }
