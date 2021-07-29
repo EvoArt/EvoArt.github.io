@@ -119,6 +119,6 @@ code,
 kbd,
 pre,
 samp {
-  font-family: JuliaMono,Consolas, 'Courier New', monospace;
+  font-family: JuliaMono, monospace;
   font-size: 0.7em;
 }
