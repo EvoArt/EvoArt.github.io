@@ -1,6 +1,9 @@
 +++
 title = "WGLMakie + JSServe"
 +++
+
+TEST
+
 ~~~
 <div id="application-dom" data-jscall-id="9">
   <div data-jscall-id="7">
