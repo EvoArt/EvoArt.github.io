@@ -4,7 +4,7 @@ pre.hljl {
     margin: 5px;
     padding: 5px;
     overflow-x: auto;
-    color: rgb(251,251,251); background-color: rgb(68,68,68); }
+    color: #fbfbfb; background-color: rgb(68,68,68); }
 pre.hljl > span.hljl-t { }
 pre.hljl > span.hljl-w { }
 pre.hljl > span.hljl-e { }
