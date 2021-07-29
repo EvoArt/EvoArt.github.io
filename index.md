@@ -1,6 +1,4 @@
-+++
-weave = true
-+++
+
 @def title = "Franklin Example"
 @def tags = ["syntax", "code"]
 
@@ -11,4 +9,4 @@ weave = true
 Just a random collection of bits n' bobs. Some [solutions to problems](/menu1/) from maths text books. Bayesian data analyis [demos](/menu3/) being ported from R to Julia. And models from my [research](/menu2/).
 
 
-{{insert_weave _assets/demo21.jmd}}
+

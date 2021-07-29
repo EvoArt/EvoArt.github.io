@@ -16,9 +16,9 @@ CairoMakie.jl is used for plotting
 to install new packages, type e.g. ] add CairoMakie
 
 ```julia term = false
-using CairoMakie, Distributions, DataFrames
-set_theme!(theme_minimal(),Figure =(backgroundcolor = :transparent,),Axis = (leftspinevisible = false,
-yticklabelsvisible=false,backgroundcolor = :transparent,),)
+using CairoMakie, Distributions, DataFrames, Colors
+set_theme!(theme_minimal(),Axis = (leftspinevisible = false,
+yticklabelsvisible=false,),)
 ```
 
 Posterior is Beta(438,544)
@@ -35,10 +35,12 @@ df1.p =pdf.(posterior,df1.θ);
 compute also 95% central interval
 
 ```julia term = false
+
 # LinRange creates evenly spaced values from 2.5% quantile
 # to 97.5% quantile (i.e., 95% central interval)
-# The '...' notation tells Julia to unpack the output from the quantile function 
-df2 =DataFrame(θ = LinRange(quantile(posterior,[0.025,0.975])..., 100))# compute the posterior density
+# '...' tells Julia to unpack the output from the quantile function 
+# compute the posterior density
+df2 =DataFrame(θ = LinRange(quantile(posterior,[0.025,0.975])..., 100))
 df2.p =pdf.(posterior,df2.θ);
 ```
 
@@ -48,7 +50,8 @@ and 48.8% line for population average
 ```julia  out_width = "70%"
 fig, ax, post = lines(df1.θ, df1.p, color = :black, linewidth = 4,
 axis = (title = "Posterior distribution given uniform prior",
-titlesize = 24,))
+titlesize = 24,backgroundcolor = colorant"#fffff8",),
+figure =(backgroundcolor = colorant"#fffff8",))
 # Add a layer of colorized 95% posterior interval
 i95 = band!(df2.θ,fill(0.0,length(df2.p)), df2.p, color = (:blue,0.2))
 # Add the proportion of girl babies in general population
