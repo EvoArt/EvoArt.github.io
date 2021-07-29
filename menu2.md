@@ -11,4 +11,4 @@
 \toc
 
 
-## [Symbiont Network Dynamics](/mymods/symbiont/index.html)
+## [Symbiont Network Dynamics](/mymods/symbionts/index.html)
