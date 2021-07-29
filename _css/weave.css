@@ -4,7 +4,7 @@ pre.hljl {
     margin: 5px;
     padding: 5px;
     overflow-x: auto;
-    color: #fbfbfb; background-color: rgb(3,3,3); }
+    color: #fbfbfb; background-color: #282c34; }
 pre.hljl > span.hljl-t { }
 pre.hljl > span.hljl-w { }
 pre.hljl > span.hljl-e { }
@@ -98,7 +98,7 @@ pre {
 pre.hljl {
   margin: 0 0 10px;
   display: block;
-  background: #1f1e1e;
+  background: #282c34;
   border-radius: 4px;
   padding : 5px;
 }
@@ -108,7 +108,7 @@ pre.output {
 }
 
 pre.code {
-  background: #1f1e1e;
+  background: #282c34;
 }
 
 pre.julia-error {
