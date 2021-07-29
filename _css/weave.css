@@ -98,6 +98,8 @@ pre {
 pre.hljl {
   margin: 0 0 10px;
   display: block;
+  word-break: break-all;
+  word-wrap: break-word;
   background: #282c34;
   border-radius: 4px;
   padding : 5px;

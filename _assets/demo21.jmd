@@ -12,12 +12,13 @@ output:
 posterior distribution of the proportion of girls $\theta$, using
 uniform prior on $\theta$.
 
-Statsplots.jl is used for plotting
-to install new packages, type e.g. ] add SatsPlots
+CairoMakie.jl is used for plotting
+to install new packages, type e.g. ] add CairoMakie
 
 ```julia term = false
 using CairoMakie, Distributions, DataFrames
-set_theme!(theme_minimal(),Axis = (leftspinevisible = false,yticklabelsvisible=false,),)
+set_theme!(theme_minimal(),Figure =(backgroundcolor = :transparent,),Axis = (leftspinevisible = false,
+yticklabelsvisible=false,backgroundcolor = :transparent,),)
 ```
 
 Posterior is Beta(438,544)
