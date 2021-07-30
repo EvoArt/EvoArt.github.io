@@ -50,8 +50,8 @@ and 48.8% line for population average
 ```julia  out_width = "70%"
 fig, ax, post = lines(df1.θ, df1.p, color = :black, linewidth = 4,
 axis = (title = "Posterior distribution given uniform prior",
-titlesize = 24,backgroundcolor = colorant"#fffff8",),
-figure =(backgroundcolor = colorant"#fffff8",))
+titlesize = 24,backgroundcolor = :transparent,),
+figure =(backgroundcolor = :transparent,))
 # Add a layer of colorized 95% posterior interval
 i95 = band!(df2.θ,fill(0.0,length(df2.p)), df2.p, color = (:blue,0.2))
 # Add the proportion of girl babies in general population
