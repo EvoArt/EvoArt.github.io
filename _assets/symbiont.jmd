@@ -15,7 +15,7 @@ Page(exportable=true, offline=true)
 ```
 
 This page gives a brief overview of a model (used in a recently submitted [paper](nolinkyet)) of symbiont population dynamics due to both horizontal and 
-verical transmission. The model is used to descibe how the fitness effects a symbiont has on its hosts will affect 
+verical transmission. The model is a discrete time difference equation, used to descibe how the fitness effects a symbiont has on its hosts will affect 
 the structure of host-symbiont interaction networks. In particular we are interested on the impact of mutualistic vs antagonistic interations on 
 the spread of a symbiont through a community of hosts.
 
@@ -40,16 +40,16 @@ function Δp(du,u,p,t)
     """
     p = ωA, ωB, β
     """
-    du[1] = (u[1]*(1-u[1])*(p[1]-p[2]))/((u[1]*p[1]) + ((1-u[1])*p[2])) + (p[3]*u[1]* (1-u[1]) )
+    du[1] =u[1]+ (u[1]*(1-u[1])*(p[1]-p[2]))/((u[1]*p[1]) + ((1-u[1])*p[2])) + (p[3]*u[1]* (1-u[1]) )
 end
 # pick initial values and parameter values. Note that here, by convention p denotes "parameters",
 # whereas u is the symbiont frequency. 
 u0 = [0.1]
 p = [0.9,1.0, 0.4]
 # construct an ODE problem
-prob = ODEProblem(Δp,u0,(1.0,100.0),p)
-# solve using Tsitouras 5/4 Runge-Kutta method
-sol = solve(prob, Tsit5());
+prob = DiscreteProblem(Δp,u0,(1.0,100.0),p)
+# solve using the discrete problem solver
+sol = solve(prob);
 # plot
 lines(sol.t,vcat(sol.u...))
 ```
@@ -76,10 +76,10 @@ P[P .>1.0] .= 1.0
 # 3d surface plot and a heatmap.
 fig = Figure(resolution = (935, 465))
 scene3d = LScene(fig[1, 1], scenekw = (camera = cam3d!, raw = false))
-ax = Axis(fig[1, 2],xlabel ="β",ylabel ="ωA")
+ax = Axis(fig[1, 2],xlabel = L"\Beta",ylabel = L"\omega A")
 surf = surface!(scene3d,β,ωA,P)
 heat = heatmap!(ax,β,ωA,P)
-Colorbar(fig[1, 3], heat,label = "p⃰")
+Colorbar(fig[1, 3], heat,label = L"p^{*}")
 fig
 
 ```
@@ -162,7 +162,7 @@ function multi(du,u,p,t)
     and each element i,j is the transmission rate to species i from species j 
     """
     transmission = vec((sum(p[3] .*u',dims = 2)  ) .* (1 .- u))
-     du .= (u .*(1 .-u) .*(p[1] .-p[2])) ./ ((u .*p[1]) .+ ((1 .-u) .*p[2])) .+ transmission
+     du .= u .+ (u .*(1 .-u) .*(p[1] .-p[2])) ./ ((u .*p[1]) .+ ((1 .-u) .*p[2])) .+ transmission
 end
 ```
 
@@ -203,7 +203,7 @@ Now we can define a function to run simulations and return an array of final sym
 
 ```julia
 function run_sim(nHost ::Int64,nSim ::Int64, sigmin = 0, sigmax = 0.05, t =1000.0)
-    prob = ODEProblem(multi,rand(nHost),(0.0,t), #this will be remade with new values each iteration
+    prob = DiscreteProblem(multi,rand(nHost),(0.0,t), #this will be remade with new values each iteration
     p = [rand(nHost),rand(nHost),rand(nHost,nHost),nHost])
     data = Array{Float64}(undef,nSim*(nHost+1),nHost +2) # creating an empty array and filling it is faster 
 							 # than increasing the array size with each iteration
@@ -216,7 +216,7 @@ function run_sim(nHost ::Int64,nSim ::Int64, sigmin = 0, sigmax = 0.05, t =1000.
             prob = remake(prob,u0 = fill(0.01,nHost),
                                 p = [w..., β])
             hyperParams = [m,mean(β)]
-            data[row,:] = vcat(hyperParams...,solve(prob,Tsit5(),saveon = false).u[end])
+            data[row,:] = vcat(hyperParams...,solve(prob,saveon = false).u[end])
             row +=1
         end
     end
@@ -261,17 +261,14 @@ end
 If you are unsure of what the question mark is doing in the shannon function, see details on the ternary operator
 [here](https://docs.julialang.org/en/v1/manual/control-flow/#man-conditional-evaluation). Everything is in place now to run some simulations.
 
-```julia eval = false
-data = run_sim(10,1000, 0, 0.05)
+```julia
+data = run_sim(10,100000, 0, 0.05)
 df = getResults(data);
+CSV.write("discdat.csv",df);
 ```
 
 Now lets put the data in bins and plot a heatmap.
 
-```julia echo = false
-df = CSV.read("dat.csv",DataFrame);
-
-```
 
 ```julia results = "html"
 function zVals(M,β,Z,cuts = 10,func = mean)
