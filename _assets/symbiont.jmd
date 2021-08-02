@@ -25,7 +25,7 @@ First we model tha change in the prevalence of a symbiont within a single host s
 population.
 
 $$
-\frac{dp}{dt}=p(1-p) \frac{\omega A-w B}{p \omega A+(1-p) \omega B}+\beta p(1-p)
+\Delta p =p(1-p) \frac{\omega A-w B}{p \omega A+(1-p) \omega B}+\beta p(1-p)
 $$
 Where $p$ is the proportion of the host population that is infected with the symbiont, $\omega A$ and $\omega B$ are host fitness 
 with and without the symbiont respectively, and $\beta$ is the horizontal transmission coefficient.
@@ -51,7 +51,7 @@ prob = DiscreteProblem(Δp,u0,(1.0,100.0),p)
 # solve using the discrete problem solver
 sol = solve(prob);
 # plot
-lines(sol.t,vcat(sol.u...))
+lines(sol.t,vcat(sol.u...),backgroundcolor = :transparent)
 ```
 The system is at equilibrium when selection balances transmission, i.e. when $p=\frac{\omega B}{\omega B-\omega A}-\frac{1}{\beta}$.
   Since $p$ must lie between zero and 1, feasible internal equilibria exist only when 
@@ -74,12 +74,12 @@ P[P .<0] .= 0
 P[P .>1.0] .= 1.0
 # plot the results in a figure environment containing an interactive (well you can rotate it)
 # 3d surface plot and a heatmap.
-fig = Figure(resolution = (935, 465))
-scene3d = LScene(fig[1, 1], scenekw = (camera = cam3d!, raw = false))
-ax = Axis(fig[1, 2],xlabel = L"\Beta",ylabel = L"\omega $A$")
-surf = surface!(scene3d,β,ωA,P)
+fig = Figure(resolution = (935, 465),backgroundcolor = :transparent)
+scene3d = LScene(fig[1, 1], scenekw = (camera = cam3d!, raw = false),backgroundcolor = :transparent)
+ax = Axis(fig[1, 2],xlabel = L"\beta",ylabel = L"wA",backgroundcolor = :transparent)
+surf = surface!(scene3d,β,ωA,P),
 heat = heatmap!(ax,β,ωA,P)
-Colorbar(fig[1, 3], heat,label = "p^{*}")
+Colorbar(fig[1, 3], heat,label = L"p^{*}")
 fig
 
 ```
@@ -93,7 +93,7 @@ The above equation can be generalised to model the symbiont dynamics within a
 community with multiple host species
 
 $$
-\frac{dp_{i}}{dt}=p_{i}\left(1-p_{i}\right) \frac{\omega A_{i}-\omega B_{i}}{p_{i} \omega A_{i}+\left(1-p_{i}\right) \omega B_{i}}+\left(\sum_{\beta_{i j}} \beta_{i, j} p_{j}\right)\left(1-p_{i}\right)
+\Delta p_{i}=p_{i}\left(1-p_{i}\right) \frac{\omega A_{i}-\omega B_{i}}{p_{i} \omega A_{i}+\left(1-p_{i}\right) \omega B_{i}}+\left(\sum_{\beta_{i j}} \beta_{i, j} p_{j}\right)\left(1-p_{i}\right)
 $$
 
 where $\beta_{i,j}$ is the transmission rate from species $j$ to $i$. 
@@ -123,7 +123,7 @@ end
 If you are confused by defining two functions with the same name, see [here](https://opensourc.es/blog/basics-multiple-dispatch/)
 
 ```julia results = "html"
-    fig = Figure(resolution = (1400, 467), fontsize = 18, font = "sans")
+    fig = Figure(resolution = (1100, 367), fontsize = 18, font = "sans")
   
     para = Axis(fig[1,1],title = "Parasite without interspecific transmission", xlabel = "ωA = 0.9, β = 0.1,0.0", ylabel = "ωA = 0.9, β = 0.1,0.0", backgroundcolor = :black)
     p = vcat([0.9,1.0,0.1,0.0]',[0.9,1.0,0.0,0.1]')
@@ -262,7 +262,7 @@ If you are unsure of what the question mark is doing in the shannon function, se
 [here](https://docs.julialang.org/en/v1/manual/control-flow/#man-conditional-evaluation). Everything is in place now to run some simulations.
 
 ```julia 
-data = run_sim(10,10000, 0, 0.05)
+data = run_sim(10,100000, 0, 0.05)
 df = getResults(data);
 CSV.write("discdat.csv",df);
 ```
@@ -284,7 +284,7 @@ function zVals(M,β,Z,cuts = 10,func = mean)
 end
 
 update_theme!(theme_minimal())
-fig = Figure(resolution =(1400,700))
+fig = Figure(resolution =(1100,550))
 axG = Axis(fig[2, 1], title = "Generality")
 gg = heatmap!(axG, zVals(df.M, df.β, df.G,10)...)
 Colorbar(fig[1, 1], gg, vertical = false)
