@@ -76,10 +76,10 @@ P[P .>1.0] .= 1.0
 # 3d surface plot and a heatmap.
 fig = Figure(resolution = (935, 465))
 scene3d = LScene(fig[1, 1], scenekw = (camera = cam3d!, raw = false))
-ax = Axis(fig[1, 2],xlabel = L"\Beta",ylabel = L"\omega A")
+ax = Axis(fig[1, 2],xlabel = L"\Beta",ylabel = L"\omega $A$")
 surf = surface!(scene3d,β,ωA,P)
 heat = heatmap!(ax,β,ωA,P)
-Colorbar(fig[1, 3], heat,label = "p")
+Colorbar(fig[1, 3], heat,label = "p^{*}")
 fig
 
 ```
@@ -261,15 +261,12 @@ end
 If you are unsure of what the question mark is doing in the shannon function, see details on the ternary operator
 [here](https://docs.julialang.org/en/v1/manual/control-flow/#man-conditional-evaluation). Everything is in place now to run some simulations.
 
-```julia eval = false
-data = run_sim(10,100000, 0, 0.05)
+```julia 
+data = run_sim(10,10000, 0, 0.05)
 df = getResults(data);
 CSV.write("discdat.csv",df);
 ```
 
-```julia echo = false
-df = CSV.read("discdat.csv",DataFrame)
-```
 
 Now lets put the data in bins and plot a heatmap.
 
