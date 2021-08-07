@@ -9,7 +9,7 @@ output:
 
 ```julia
 using DifferentialEquations, Distributions, CSV,
-DataFrames,LinearAlgebra
+DataFrames,LinearAlgebra,Colors
 using JSServe, WGLMakie
 set_theme!(theme_dark())
 Page(exportable=true, offline=true)
@@ -203,7 +203,7 @@ end
 Now we can define a function to run simulations and return an array of final symbiont prevalence.
 
 ```julia
-function run_sim(nHost ::Int64,nSim ::Int64, sigmin = 0, sigmax = 0.05, t =1000.0,mumin = 0, mumax = 0.05)
+function run_sim(nHost ::Int64,nSim ::Int64,σ = 0.05, t =1000.0,mumin = 0, mumax = 0.05)
     prob = DiscreteProblem(multi,rand(nHost),(0.0,t), #this will be remade with new values each iteration
     p = [rand(nHost),rand(nHost),rand(nHost,nHost),nHost])
     data = Array{Float64}(undef,nSim*(nHost+1),nHost +2) # creating an empty array and filling it is faster 
@@ -212,7 +212,6 @@ function run_sim(nHost ::Int64,nSim ::Int64, sigmin = 0, sigmax = 0.05, t =1000.
     for m in 0:nHost
         w = ws(nHost,m)
         for i in 1:nSim
-            σ = rand(Uniform(sigmin,sigmax))
             μ = rand(Uniform(mumin,mumax))
             β = betas(nHost,μ,σ) 
             prob = remake(prob,u0 = fill(0.01,nHost),
@@ -232,7 +231,7 @@ Now the way the model is set up, you will never get a symbiont prevalence of
 0 for any given host species, since the symbionts presence in the community means here will 
 always be some small amount of interspecific transmission, even if the symbiont can never
  establish itself and spread within a particular host population. Here we use 
-an arbitrary cut-off symbiont prevalence of 0.001 for *biologically significant* interactions. In 
+an arbitrary cut-off symbiont prevalence of 0.005 for *biologically significant* interactions. In 
 addition to calculating connectance, we want to know the *generality* of th host-symbiont network 
 in each case, i.e. how evenly spread is the symbiont between the various hosts. There are numerous ways 
 to calculate this. Here we use the Shannons Index of symbiont prevalence across the various host species $G = 2H$, where 
@@ -249,13 +248,13 @@ function shannon(a, n ::Int64)
     return isnan(H) ? 0 : 2* H
 end
 
-function getResults(data ::Matrix, cutoff = 0.001, n = 10)
+function getResults(data ::Matrix, cutoff = 0.005, n = 10)
     M = data[:,1]
     β = data[:,2]
     x = data[:,3:end]
     x[x .< 0] .= 0
     C = sum(x .> cutoff, dims = 2) ./n
-    G = [shannon(row,n) for row in eachrow(x)]
+    G = [shannon(row[row .> cutoff],sum(row .> cutoff)) for row in eachrow(x)]
     return DataFrame(hcat(M,β,C,G), [:M,:β,:C,:G])
 end 
 ```
@@ -264,7 +263,7 @@ If you are unsure of what the question mark is doing in the shannon function, se
 [here](https://docs.julialang.org/en/v1/manual/control-flow/#man-conditional-evaluation). Everything is in place now to run some simulations.
 
 ```julia 
-data = run_sim(10,100000, 0, 0.05)
+data = run_sim(10,10000)
 df = getResults(data);
 CSV.write("discdat.csv",df);
 ```
