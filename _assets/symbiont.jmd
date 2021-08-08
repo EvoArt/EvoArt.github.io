@@ -294,6 +294,5 @@ cc = heatmap!(axC, zVals(df.M, df.β, df.C,10)...)
 Colorbar(fig[2, 3], cc)
 fig
 ```
-
 Both generality and connectance increase with the number of mutualistic interactions and the mean transmission rate. 
 In particular connectance increases rapidly moving from 0 to 1 mutualistic interaction.
