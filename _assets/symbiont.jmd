@@ -263,7 +263,7 @@ If you are unsure of what the question mark is doing in the shannon function, se
 [here](https://docs.julialang.org/en/v1/manual/control-flow/#man-conditional-evaluation). Everything is in place now to run some simulations.
 
 ```julia 
-data = run_sim(10,100000)
+data = run_sim(10,10000)
 df = getResults(data);
 CSV.write("discdat.csv",df);
 ```
