@@ -276,7 +276,7 @@ Now lets put the data in bins and plot a heatmap.
 function zVals(y,x,z,cuts = 10)
     counts = fit(Histogram, (x,y) ,nbins = cuts)
     vals = fit(Histogram, (x,y),Weights(z),nbins=cuts)
-    return collect(vals.edges[1]),collect(vals.edges[2]) vals.weights ./counts.weights   
+    return collect(vals.edges[1]),collect(vals.edges[2]), vals.weights ./counts.weights   
 end
 
 update_theme!(theme_minimal())
