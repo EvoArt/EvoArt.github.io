@@ -288,10 +288,10 @@ update_theme!(theme_minimal())
 fig = Figure(resolution =(1100,550))
 axG = Axis(fig[2, 1], title = "Generality")
 gg = heatmap!(axG, zVals(df.M, df.β, df.G,10)...)
-Colorbar(fig[1, 1], gg, vertical = false)
+#Colorbar(fig[1, 1], gg, vertical = false)
 axC = Axis(fig[2, 2], title = "Connectance")
 cc = heatmap!(axC, zVals(df.M, df.β, df.C,10)...)
-Colorbar(fig[2, 3], cc)
+#Colorbar(fig[2, 3], cc)
 fig
 ```
 Both generality and connectance increase with the number of mutualistic interactions and the mean transmission rate. 
