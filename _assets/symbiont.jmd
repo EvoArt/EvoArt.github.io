@@ -9,7 +9,7 @@ output:
 
 ```julia
 using DifferentialEquations, Distributions, CSV,
-DataFrames,LinearAlgebra,Colors
+DataFrames,LinearAlgebra,Colors,StatsBase
 using JSServe, WGLMakie
 set_theme!(theme_dark())
 Page(exportable=true, offline=true)
@@ -248,7 +248,7 @@ function shannon(a, n ::Int64)
     return isnan(H) ? 0 : 2* H
 end
 
-function getResults(data ::Matrix, cutoff = 0.005, n = 10)
+function getResults(data ::Matrix, cutoff = 0.01, n = 10)
     M = data[:,1]
     β = data[:,2]
     x = data[:,3:end]
@@ -273,15 +273,10 @@ Now lets put the data in bins and plot a heatmap.
 
 
 ```julia results = "html"
-function zVals(M,β,Z,cuts = 10,func = mean,betamax = 0.05)
-    z = Array{Float64}(undef,cuts,length(unique(M)))
-    cutvals = LinRange(minimum(β),betamax,cuts+1)
-    for m in 0:Int(maximum(M))
-        for i in 1:cuts
-        z[i,m+1] = func(Z[(M .==m) .& (β .> cutvals[i]) .& (β .< cutvals[i+1])])
-        end
-    end
-    return LinRange(minimum(β),betamax,cuts),unique(M),z
+function zVals(y,x,z,cuts = 10)
+    counts = fit(Histogram, (x,y) ,nbins = cuts)
+    vals = fit(Histogram, (x,y),Weights(z),nbins=cuts)
+    return collect(vals.edges[1]),collect(vals.edges[2]) vals.weights ./counts.weights   
 end
 
 update_theme!(theme_minimal())
