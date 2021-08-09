@@ -16,8 +16,8 @@ Page(exportable=true, offline=true)
 ```
 
 This page gives a brief overview of a model (used in a recently submitted [paper](nolinkyet)) of symbiont population dynamics due to both horizontal and 
-verical transmission. The model is a discrete time difference equation, used to descibe how the fitness effects a symbiont has on its hosts will affect 
-the structure of host-symbiont interaction networks. In particular we are interested on the impact of mutualistic vs antagonistic interations on 
+vertical transmission. The model is a discrete time difference equation, used to descibe how the fitness effects a symbiont has on its hosts will affect 
+the structure of host-symbiont interaction networks. In particular we are interested in the impact of mutualistic vs antagonistic interations on 
 the spread of a symbiont through a community of hosts.
 
 # Single host species
@@ -36,7 +36,7 @@ uninfected and infected hosts. The second term is the change in frequency of sym
 This can be formulated as a differential equation problem to solve using [DifferentialEquations.jl](https://diffeq.sciml.ai/stable/), like so.
 
 ```julia results = "html"
-#define a function that computes the derivative(s) wrt cureent value(s)
+#define recursion equation as a function
 function Δp(du,u,p,t)
     """
     p = ωA, ωB, β
@@ -52,7 +52,7 @@ prob = DiscreteProblem(Δp,u0,(1.0,100.0),p)
 # solve using the discrete problem solver
 sol = solve(prob);
 # plot
-lines(sol.t,vcat(sol.u...), linewidth = 2)
+lines(sol.t,vcat(sol.u...), linewidth = 4)
 ```
 The system is at equilibrium when selection balances transmission, i.e. when $p=\frac{\omega B}{\omega B-\omega A}-\frac{1}{\beta}$.
   Since $p$ must lie between zero and 1, feasible internal equilibria exist only when 
@@ -204,7 +204,7 @@ end
 Now we can define a function to run simulations and return an array of final symbiont prevalence.
 
 ```julia
-function run_sim(nHost ::Int64,nSim ::Int64,σ = 0.05, t =1000.0,sigmin = 0, sigmax = 0.05)
+function run_sim(nHost ::Int64,nSim ::Int64,σ = 0.05, t =1000.0)
     prob = DiscreteProblem(multi,rand(nHost),(0.0,t), #this will be remade with new values each iteration
     p = [rand(nHost),rand(nHost),rand(nHost,nHost),nHost])
     data = Array{Float64}(undef,nSim*(nHost+1),nHost +2) # creating an empty array and filling it is faster 
@@ -213,8 +213,9 @@ function run_sim(nHost ::Int64,nSim ::Int64,σ = 0.05, t =1000.0,sigmin = 0, sig
     for m in 0:nHost
         w = ws(nHost,m)
         for i in 1:nSim
-            σ = rand(Uniform(sigmin,sigmax))
-            β = betas(nHost,0.0,σ) 
+            μ = rand(Uniform(0,0.05))
+            σ = rand(Uniform(0,0.05))
+            β = betas(nHost,μ,σ) 
             prob = remake(prob,u0 = fill(0.001,nHost),
                                 p = [w..., β])
             hyperParams = [m,mean(β)]
@@ -232,7 +233,7 @@ Now the way the model is set up, you will never get a symbiont prevalence of
 0 for any given host species, since the symbionts presence in the community means here will 
 always be some small amount of interspecific transmission, even if the symbiont can never
  establish itself and spread within a particular host population. Here we use 
-an arbitrary cut-off symbiont prevalence of 0.005 for *biologically significant* interactions. In 
+an arbitrary cut-off symbiont prevalence of 0.001 for *biologically significant* interactions. In 
 addition to calculating connectance, we want to know the *generality* of th host-symbiont network 
 in each case, i.e. how evenly spread is the symbiont between the various hosts. There are numerous ways 
 to calculate this. Here we use the Shannons Index of symbiont prevalence across the various host species $G = 2H$, where 
@@ -249,7 +250,7 @@ function shannon(a, n ::Int64)
     return isnan(H) ? 0 : 2* H
 end
 
-function getResults(data ::Matrix, cutoff = 0.005, n = 10)
+function getResults(data ::Matrix, cutoff = 0.001, n = 10)
     M = data[:,1]
     β = data[:,2]
     x = data[:,3:end]
