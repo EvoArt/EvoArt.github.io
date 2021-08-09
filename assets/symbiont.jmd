@@ -231,7 +231,7 @@ Now the way the model is set up, you will never get a symbiont prevalence of
 0 for any given host species, since the symbionts presence in the community means here will 
 always be some small amount of interspecific transmission, even if the symbiont can never
  establish itself and spread within a particular host population. Here we use 
-an arbitrary cut-off symbiont prevalence of 0.005 for *biologically significant* interactions. In 
+an arbitrary cut-off symbiont prevalence of 0.1 for *biologically significant* interactions. In 
 addition to calculating connectance, we want to know the *generality* of th host-symbiont network 
 in each case, i.e. how evenly spread is the symbiont between the various hosts. There are numerous ways 
 to calculate this. Here we use the Shannons Index of symbiont prevalence across the various host species $G = 2H$, where 
@@ -248,13 +248,13 @@ function shannon(a, n ::Int64)
     return isnan(H) ? 0 : 2* H
 end
 
-function getResults(data ::Matrix, cutoff = 0.01, n = 10)
+function getResults(data ::Matrix, cutoff = 0.1, n = 10)
     M = data[:,1]
     β = data[:,2]
     x = data[:,3:end]
     x[x .< 0] .= 0
     C = sum(x .> cutoff, dims = 2) ./n
-    G = [shannon(row[row .> cutoff],sum(row .> cutoff)) for row in eachrow(x)]
+    G = [shannon(row,n) for row in eachrow(x)]
     return DataFrame(hcat(M,β,C,G), [:M,:β,:C,:G])
 end 
 ```
