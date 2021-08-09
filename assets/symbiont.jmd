@@ -186,7 +186,7 @@ function ws(n ::Int64,nMut ::Int64)
     Returns a tuple containing a vector for wA and for wB.
     wA values will be greater than corresponding wB values nMut times.
     """
-    return vcat(fill(1.0,nMut),rand(n-nMut)), vcat(rand(nMut),fill(1.0,n-nMut))
+    return vcat(fill(1.0,nMut),rand(Uniform(0.5,1),n-nMut)), vcat(rand(Uniform(0.5,1),nMut),fill(1.0,n-nMut))
 end
 
 function betas(n ::Int64,μ::Float64,σ ::Float64)
@@ -203,7 +203,7 @@ end
 Now we can define a function to run simulations and return an array of final symbiont prevalence.
 
 ```julia
-function run_sim(nHost ::Int64,nSim ::Int64,σ = 0.05, t =1000.0,mumin = 0, mumax = 0.05)
+function run_sim(nHost ::Int64,nSim ::Int64,σ = 0.05, t =1000.0,sigmin = 0, sigmax = 0.05)
     prob = DiscreteProblem(multi,rand(nHost),(0.0,t), #this will be remade with new values each iteration
     p = [rand(nHost),rand(nHost),rand(nHost,nHost),nHost])
     data = Array{Float64}(undef,nSim*(nHost+1),nHost +2) # creating an empty array and filling it is faster 
@@ -212,9 +212,9 @@ function run_sim(nHost ::Int64,nSim ::Int64,σ = 0.05, t =1000.0,mumin = 0, muma
     for m in 0:nHost
         w = ws(nHost,m)
         for i in 1:nSim
-            μ = rand(Uniform(mumin,mumax))
-            β = betas(nHost,μ,σ) 
-            prob = remake(prob,u0 = fill(0.01,nHost),
+            σ = rand(Uniform(sigmin,sigmax))
+            β = betas(nHost,0,σ) 
+            prob = remake(prob,u0 = fill(0.001,nHost),
                                 p = [w..., β])
             hyperParams = [m,mean(β)]
             data[row,:] = vcat(hyperParams...,solve(prob,saveon = false).u[end])
@@ -231,7 +231,7 @@ Now the way the model is set up, you will never get a symbiont prevalence of
 0 for any given host species, since the symbionts presence in the community means here will 
 always be some small amount of interspecific transmission, even if the symbiont can never
  establish itself and spread within a particular host population. Here we use 
-an arbitrary cut-off symbiont prevalence of 0.1 for *biologically significant* interactions. In 
+an arbitrary cut-off symbiont prevalence of 0.001 for *biologically significant* interactions. In 
 addition to calculating connectance, we want to know the *generality* of th host-symbiont network 
 in each case, i.e. how evenly spread is the symbiont between the various hosts. There are numerous ways 
 to calculate this. Here we use the Shannons Index of symbiont prevalence across the various host species $G = 2H$, where 
@@ -248,7 +248,7 @@ function shannon(a, n ::Int64)
     return isnan(H) ? 0 : 2* H
 end
 
-function getResults(data ::Matrix, cutoff = 0.1, n = 10)
+function getResults(data ::Matrix, cutoff = 0.001, n = 10)
     M = data[:,1]
     β = data[:,2]
     x = data[:,3:end]
