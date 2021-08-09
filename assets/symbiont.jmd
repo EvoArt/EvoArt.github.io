@@ -213,7 +213,7 @@ function run_sim(nHost ::Int64,nSim ::Int64,σ = 0.05, t =1000.0,sigmin = 0, sig
         w = ws(nHost,m)
         for i in 1:nSim
             σ = rand(Uniform(sigmin,sigmax))
-            β = betas(nHost,0,σ) 
+            β = betas(nHost,0.0,σ) 
             prob = remake(prob,u0 = fill(0.001,nHost),
                                 p = [w..., β])
             hyperParams = [m,mean(β)]
