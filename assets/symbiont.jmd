@@ -11,7 +11,7 @@ output:
 using DifferentialEquations, Distributions, CSV,
 DataFrames,LinearAlgebra,Colors,StatsBase
 using JSServe, WGLMakie
-set_theme!(theme_dark())
+set_theme!(theme_dark(),Theme(Axis = (ylabelcolor = :white,xlabelcolor = :white,))
 Page(exportable=true, offline=true)
 ```
 
@@ -52,7 +52,7 @@ prob = DiscreteProblem(Δp,u0,(1.0,100.0),p)
 # solve using the discrete problem solver
 sol = solve(prob);
 # plot
-lines(sol.t,vcat(sol.u...))
+lines(sol.t,vcat(sol.u...), linewidth = 2)
 ```
 The system is at equilibrium when selection balances transmission, i.e. when $p=\frac{\omega B}{\omega B-\omega A}-\frac{1}{\beta}$.
   Since $p$ must lie between zero and 1, feasible internal equilibria exist only when 
@@ -76,9 +76,10 @@ P[P .>1.0] .= 1.0
 # plot the results in a figure environment containing an interactive (well you can rotate it)
 # 3d surface plot and a heatmap.
 fig = Figure(resolution = (935, 465))
-scene3d = LScene(fig[1, 1], scenekw = (camera = cam3d!, raw = false))
+scene3d = LScene(fig[1, 1], scenekw = (camera = cam3d!, raw = false),
+xlabel = "Beta",ylabel = "wA")
 ax = Axis(fig[1, 2],xlabel = L"\beta",ylabel = L"wA")
-surf = surface!(scene3d,β,ωA,P)
+surf = surface!(scene3d,β,ωA,P,xlabel = "Beta",ylabel = "wA")
 heat = heatmap!(ax,β,ωA,P)
 Colorbar(fig[1, 3], heat,label = L"p^{*}")
 fig
@@ -126,7 +127,7 @@ If you are confused by defining two functions with the same name, see [here](htt
 ```julia results = "html"
     fig = Figure(resolution = (1100, 367), fontsize = 18, font = "sans")
   
-    para = Axis(fig[1,1],title = "Parasite without interspecific transmission", xlabel = "ωA = 0.9, β = 0.1,0.0", ylabel = "ωA = 0.9, β = 0.1,0.0", backgroundcolor = :black)
+    para = Axis(fig[1,1],title = "Parasite, no interspecific transmission", xlabel = "ωA = 0.9, β = 0.1,0.0", ylabel = "ωA = 0.9, β = 0.1,0.0", backgroundcolor = :black)
     p = vcat([0.9,1.0,0.1,0.0]',[0.9,1.0,0.0,0.1]')
     stplt = streamplot!(para, f, 0..1, 0..1, colormap = :plasma,
         gridsize= (20,20), arrow_size = 0) # set arrow size = 0
@@ -231,7 +232,7 @@ Now the way the model is set up, you will never get a symbiont prevalence of
 0 for any given host species, since the symbionts presence in the community means here will 
 always be some small amount of interspecific transmission, even if the symbiont can never
  establish itself and spread within a particular host population. Here we use 
-an arbitrary cut-off symbiont prevalence of 0.001 for *biologically significant* interactions. In 
+an arbitrary cut-off symbiont prevalence of 0.005 for *biologically significant* interactions. In 
 addition to calculating connectance, we want to know the *generality* of th host-symbiont network 
 in each case, i.e. how evenly spread is the symbiont between the various hosts. There are numerous ways 
 to calculate this. Here we use the Shannons Index of symbiont prevalence across the various host species $G = 2H$, where 
@@ -248,7 +249,7 @@ function shannon(a, n ::Int64)
     return isnan(H) ? 0 : 2* H
 end
 
-function getResults(data ::Matrix, cutoff = 0.001, n = 10)
+function getResults(data ::Matrix, cutoff = 0.005, n = 10)
     M = data[:,1]
     β = data[:,2]
     x = data[:,3:end]
@@ -283,10 +284,10 @@ update_theme!(theme_minimal())
 fig = Figure(resolution =(1100,550))
 axG = Axis(fig[2, 1], title = "Generality")
 gg = heatmap!(axG, zVals(df.M, df.β, df.G,10)...)
-#Colorbar(fig[1, 1], gg, vertical = false)
+Colorbar(fig[1, 1], gg, vertical = false)
 axC = Axis(fig[2, 2], title = "Connectance")
 cc = heatmap!(axC, zVals(df.M, df.β, df.C,10)...)
-#Colorbar(fig[2, 3], cc)
+Colorbar(fig[2, 3], cc)
 fig
 ```
 Both generality and connectance increase with the number of mutualistic interactions and the mean transmission rate. 
