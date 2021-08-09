@@ -11,7 +11,8 @@ output:
 using DifferentialEquations, Distributions, CSV,
 DataFrames,LinearAlgebra,Colors,StatsBase
 using JSServe, WGLMakie
-set_theme!(theme_dark(),Theme(Axis = (ylabelcolor = :white,xlabelcolor = :white,))
+set_theme!(theme_dark(),
+Theme(Axis = (ylabelcolor = :white,xlabelcolor = :white,)))
 Page(exportable=true, offline=true)
 ```
 

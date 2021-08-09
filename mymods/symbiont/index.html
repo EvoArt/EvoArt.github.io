@@ -55,13 +55,16 @@
 <span class='hljl-k'>using</span><span class='hljl-t'> </span><span class='hljl-n'>DifferentialEquations</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>Distributions</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>CSV</span><span class='hljl-p'>,</span><span class='hljl-t'>
 </span><span class='hljl-n'>DataFrames</span><span class='hljl-p'>,</span><span class='hljl-n'>LinearAlgebra</span><span class='hljl-p'>,</span><span class='hljl-n'>Colors</span><span class='hljl-p'>,</span><span class='hljl-n'>StatsBase</span><span class='hljl-t'>
 </span><span class='hljl-k'>using</span><span class='hljl-t'> </span><span class='hljl-n'>JSServe</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>WGLMakie</span><span class='hljl-t'>
-</span><span class='hljl-nf'>set_theme!</span><span class='hljl-p'>(</span><span class='hljl-nf'>theme_dark</span><span class='hljl-p'>(),</span><span class='hljl-nf'>Theme</span><span class='hljl-p'>(</span><span class='hljl-n'>Axis</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-p'>(</span><span class='hljl-n'>ylabelcolor</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-sc'>:white</span><span class='hljl-p'>,</span><span class='hljl-n'>xlabelcolor</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-sc'>:white</span><span class='hljl-p'>,))</span><span class='hljl-t'>
+</span><span class='hljl-nf'>set_theme!</span><span class='hljl-p'>(</span><span class='hljl-nf'>theme_dark</span><span class='hljl-p'>(),</span><span class='hljl-t'>
+</span><span class='hljl-nf'>Theme</span><span class='hljl-p'>(</span><span class='hljl-n'>Axis</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-p'>(</span><span class='hljl-n'>ylabelcolor</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-sc'>:white</span><span class='hljl-p'>,</span><span class='hljl-n'>xlabelcolor</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-sc'>:white</span><span class='hljl-p'>,)))</span><span class='hljl-t'>
 </span><span class='hljl-nf'>Page</span><span class='hljl-p'>(</span><span class='hljl-n'>exportable</span><span class='hljl-oB'>=</span><span class='hljl-kc'>true</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>offline</span><span class='hljl-oB'>=</span><span class='hljl-kc'>true</span><span class='hljl-p'>)</span>
 </pre>
 
 
 <pre class="julia-error">
-ERROR: syntax: missing comma or &#41; in argument list
+ERROR: MethodError: no method matching set_theme&#33;&#40;::MakieCore.Attributes, ::MakieCore.Attributes&#41;
+Closest candidates are:
+  set_theme&#33;&#40;::Any; kwargs...&#41; at /home/runner/.julia/packages/Makie/xbI6d/src/theming.jl:114
 </pre>
 
 
@@ -97,7 +100,7 @@ ERROR: syntax: missing comma or &#41; in argument list
 
 
 
-<iframe scrolling="no" id="7c196367-bf08-4d4e-8b84-a930e2cdba76" data-jscall-id="1" src="http://127.0.0.1:9284/7c196367-bf08-4d4e-8b84-a930e2cdba76" style="position: absolute; width: 100%; height: 100%; padding: 0; overflow: hidden; border: none"></iframe>
+<iframe scrolling="no" id="50188b8c-09c9-4459-a167-1dbb121b74c7" data-jscall-id="1" src="http://127.0.0.1:9284/50188b8c-09c9-4459-a167-1dbb121b74c7" style="position: absolute; width: 100%; height: 100%; padding: 0; overflow: hidden; border: none"></iframe>
 
 
 <p>The system is at equilibrium when selection balances transmission, i.e. when <span class="math">$p=\frac{\omega B}{\omega B-\omega A}-\frac{1}{\beta}$</span>.   Since <span class="math">$p$</span> must lie between zero and 1, feasible internal equilibria exist only when  infected hosts have lower fitness than uninfected, i.e., when the symbiont is either parasitic or commensal.  A mutualistic symbiont always goes to fixation. The region for which a balance between selection and  transmission can exist is bounded by  <span class="math">$\frac{\omega B-\omega A}{\omega B} \leq \beta \leq \frac{\omega B}{\omega B-\omega A}-1$</span>.</p>
@@ -128,7 +131,7 @@ ERROR: syntax: missing comma or &#41; in argument list
 
 
 
-<iframe scrolling="no" id="2363ddb7-6322-4b9a-9199-082e082f8445" data-jscall-id="2" src="http://127.0.0.1:9284/2363ddb7-6322-4b9a-9199-082e082f8445" style="position: absolute; width: 100%; height: 100%; padding: 0; overflow: hidden; border: none"></iframe>
+<iframe scrolling="no" id="5ce1c3c0-ab99-4fee-ab8e-67f5a2be304e" data-jscall-id="2" src="http://127.0.0.1:9284/5ce1c3c0-ab99-4fee-ab8e-67f5a2be304e" style="position: absolute; width: 100%; height: 100%; padding: 0; overflow: hidden; border: none"></iframe>
 
 
 <p>As we can see, there is a narrow range in which internal eqilibria exist and   the equilibrium frequency changes rapidly with relative fitness.</p>
@@ -194,7 +197,7 @@ f &#40;generic function with 2 methods&#41;
 
 
 
-<iframe scrolling="no" id="a3303e42-84c1-4f85-9d2e-acb773808d92" data-jscall-id="3" src="http://127.0.0.1:9284/a3303e42-84c1-4f85-9d2e-acb773808d92" style="position: absolute; width: 100%; height: 100%; padding: 0; overflow: hidden; border: none"></iframe>
+<iframe scrolling="no" id="1b6df053-4858-4ac5-9927-c230c967d65d" data-jscall-id="3" src="http://127.0.0.1:9284/1b6df053-4858-4ac5-9927-c230c967d65d" style="position: absolute; width: 100%; height: 100%; padding: 0; overflow: hidden; border: none"></iframe>
 
 
 <p>Looking at the first two panels, we see the potential for a small amout of interspecific transmission to move the equilibrum &#40;parasitic&#41; symbiont density  from 0 to <span class="math">$\approx$</span> 0.5 for both species. Then comparing panels 2 and 3 we see that when the symbiont benefits one of the species but all other parameters are held constant, the  species that bebnfits is not only fully infected but it drags the symbiont frequency up to <span class="math">$\approx 1$</span> in the other host species as well.</p>
@@ -346,7 +349,7 @@ getResults &#40;generic function with 3 methods&#41;
 
 
 
-<iframe scrolling="no" id="e4a381a8-acd4-47c6-80ab-295ce479fd63" data-jscall-id="4" src="http://127.0.0.1:9284/e4a381a8-acd4-47c6-80ab-295ce479fd63" style="position: absolute; width: 100%; height: 100%; padding: 0; overflow: hidden; border: none"></iframe>
+<iframe scrolling="no" id="24ab5dbc-dad1-4d41-a888-d9f14d811a66" data-jscall-id="4" src="http://127.0.0.1:9284/24ab5dbc-dad1-4d41-a888-d9f14d811a66" style="position: absolute; width: 100%; height: 100%; padding: 0; overflow: hidden; border: none"></iframe>
 
 
 <p>Both generality and connectance increase with the number of mutualistic interactions and the mean transmission rate.  In particular connectance increases rapidly moving from 0 to 1 mutualistic interaction.</p>

@@ -1592,9 +1592,9 @@ version = "1.9.0"
 
 [[VectorizationBase]]
 deps = ["ArrayInterface", "Hwloc", "IfElse", "Libdl", "LinearAlgebra", "Static"]
-git-tree-sha1 = "56cb725da95439248e6b60ea776f22eac20d56a7"
+git-tree-sha1 = "32a3252a00a8e4aa23129e2c36a237e812f71eeb"
 uuid = "3d5dd08c-fd9d-11e8-17fa-ed2836048c2f"
-version = "0.20.32"
+version = "0.20.33"
 
 [[VertexSafeGraphs]]
 deps = ["LightGraphs"]
