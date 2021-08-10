@@ -267,6 +267,7 @@ If you are unsure of what the question mark is doing in the shannon function, se
 ```julia 
 data = run_sim(10,10000)
 df = getResults(data);
+df = df[df.β .< 0.05,:]
 CSV.write("discdat.csv",df);
 ```
 
