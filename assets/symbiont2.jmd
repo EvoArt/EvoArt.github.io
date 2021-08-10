@@ -1,0 +1,296 @@
+---
+title: "Symbiont Population Dynamics and Host-Symbiont Network Structure"
+author: "Arthur Newbury"
+output:
+  html_document:
+    theme: readable
+    code_download: true
+---
+
+```julia
+using DifferentialEquations, Distributions, CSV,
+DataFrames,LinearAlgebra,Colors,StatsBase
+using JSServe, WGLMakie
+set_theme!(theme_dark())
+Page(exportable=true, offline=true)
+```
+
+This page gives a brief overview of a model (used in a recently submitted [paper](nolinkyet)) of symbiont population dynamics due to both horizontal and 
+vertical transmission. The model is a discrete time difference equation, used to descibe how the fitness effects a symbiont has on its hosts will affect 
+the structure of host-symbiont interaction networks. In particular we are interested in the impact of mutualistic vs antagonistic interations on 
+the spread of a symbiont through a community of hosts.
+
+# Single host species
+
+First we model tha change in the prevalence of a symbiont within a single host species
+population.
+
+$$
+\Delta p =p(1-p) \frac{\omega A-w B}{p \omega A+(1-p) \omega B}+\beta p(1-p)
+$$
+Where $p$ is the proportion of the host population that is infected with the symbiont, $\omega A$ and $\omega B$ are host fitness 
+with and without the symbiont respectively, and $\beta$ is the horizontal transmission coefficient.
+The first term on the right-hand side gives the change in frequency of symbionts owing to vertical transmission i.e. the fitness differences between 
+uninfected and infected hosts. The second term is the change in frequency of symbionts due horizontal transmission as in a classic Susceptible Infected (SI) model. 
+
+This can be formulated as a differential equation problem to solve using [DifferentialEquations.jl](https://diffeq.sciml.ai/stable/), like so.
+
+```julia results = "html"
+#define recursion equation as a function
+function Δp(du,u,p,t)
+    """
+    p = ωA, ωB, β
+    """
+    du[1] =u[1]+ (u[1]*(1-u[1])*(p[1]-p[2]))/((u[1]*p[1]) + ((1-u[1])*p[2])) + (p[3]*u[1]* (1-u[1]) )
+end
+# pick initial values and parameter values. Note that here, by convention p denotes "parameters",
+# whereas u is the symbiont frequency. 
+u0 = [0.1]
+p = [0.9,1.0, 0.4]
+# construct an ODE problem
+prob = DiscreteProblem(Δp,u0,(1.0,100.0),p)
+# solve using the discrete problem solver
+sol = solve(prob);
+# plot
+lines(sol.t,vcat(sol.u...), linewidth = 4)
+```
+The system is at equilibrium when selection balances transmission, i.e. when $p=\frac{\omega B}{\omega B-\omega A}-\frac{1}{\beta}$.
+  Since $p$ must lie between zero and 1, feasible internal equilibria exist only when 
+infected hosts have lower fitness than uninfected, i.e., when the symbiont is either parasitic or commensal. 
+A mutualistic symbiont always goes to fixation. The region for which a balance between selection and 
+transmission can exist is bounded by  $\frac{\omega B-\omega A}{\omega B} \leq \beta \leq \frac{\omega B}{\omega B-\omega A}-1$.
+
+Let's visualize this using [Makie.jl](http://makie.juliaplots.org/stable/). Holding $\omega A$ constant at 1 means 
+$\omega A$ is te relative fitness of infected hosts i.e., when $\omega A = 0.5$ infection halves the hosts fitness.
+
+```julia results = "html"
+β = collect(0:0.005:2)
+ωA =  collect(0.0:0.005:1)
+ωB = 1.0
+p⃰(ωA,ωB,β) = ωB/(ωB-ωA) - 1/β
+P = p⃰.(ωA',ωB,β) # the "." notation broadcats the function over several inputs while the apostrophe transposes ωA.
+		  # Put together, this broadcasts over 2 dimensions and produces a matix for plotting.
+		  # For reasosn unbenkonwst to me the y axis of the surface plot maps to the x axis of the input matrix.
+P[P .<0] .= 0	  
+P[P .>1.0] .= 1.0
+# plot the results in a figure environment containing an interactive (well you can rotate it)
+# 3d surface plot and a heatmap.
+fig = Figure(resolution = (935, 465))
+scene3d = LScene(fig[1, 1], scenekw = (camera = cam3d!, raw = false),
+xlabel = "Beta",ylabel = "wA")
+ax = Axis(fig[1, 2],xlabel = L"\beta",ylabel = L"wA")
+surf = surface!(scene3d,β,ωA,P,xlabel = "Beta",ylabel = "wA")
+heat = heatmap!(ax,β,ωA,P)
+Colorbar(fig[1, 3], heat,label = L"p^{*}")
+fig
+
+```
+ As we can see, there is a narrow range in which internal eqilibria exist and
+  the equilibrium frequency changes rapidly with relative fitness.
+
+
+# Multiple hosts
+
+The above equation can be generalised to model the symbiont dynamics within a 
+community with multiple host species
+
+$$
+\Delta p_{i}=p_{i}\left(1-p_{i}\right) \frac{\omega A_{i}-\omega B_{i}}{p_{i} \omega A_{i}+\left(1-p_{i}\right) \omega B_{i}}+\left(\sum_{\beta_{i j}} \beta_{i, j} p_{j}\right)\left(1-p_{i}\right)
+$$
+
+where $\beta_{i,j}$ is the transmission rate from species $j$ to $i$. 
+
+## A pair of hosts
+
+First we look at the the change in symbiont prevalence with just two host species, since this
+ is easier to visulize than higher dimensional cases. In order to plot trajectories as streamplots 
+ we need a function that takes in the current x,y coordinates and returns objects of type Point. 
+ There is currently an issue with the arrows generated by Makies streamplot function, so for now we 
+ also need to extract the arrow positions from the streamplot and plot them with an arrow plot. This requires a function (a [method](https://docs.julialang.org/en/v1/manual/methods/)
+  really) that takes in a single input). 
+```julia
+function f(x,y)
+    u = [x,y]
+    transmission = vec(sum(p[:,3:end] .*u',dims = 2 ) .* (1 .- u))
+     du = (u .*(1 .-u) .*(p[:,1] .-p[:,2])) ./ ((u .*p[:,1]) .+ ((1 .-u) .*p[:,2])) .+ transmission
+     return Point(du...)
+end
+function f(u) # method for getting arrow directions 
+    transmission = (sum(p[:,3:end] .*u',dims = 2) ) .* (1 .- u)
+     du = (u .*(1 .-u) .*(p[:,1] .-p[:,2])) ./ ((u .*p[:,1]) .+ ((1 .-u) .*p[:,2])) .+ transmission
+     return Point(du...)
+end
+```
+
+If you are confused by defining two functions with the same name, see [here](https://opensourc.es/blog/basics-multiple-dispatch/)
+
+```julia results = "html"
+    fig = Figure(resolution = (1100, 367), fontsize = 18, font = "sans")
+  
+    para = Axis(fig[1,1],title = "Parasite, no interspecific transmission", xlabel = "ωA = 0.9, β = 0.1,0.0", ylabel = "ωA = 0.9, β = 0.1,0.0", backgroundcolor = :black)
+    p = vcat([0.9,1.0,0.1,0.0]',[0.9,1.0,0.0,0.1]')
+    stplt = streamplot!(para, f, 0..1, 0..1, colormap = :plasma,
+        gridsize= (20,20), arrow_size = 0) # set arrow size = 0
+    Apos = Makie.streamplot_impl(StreamPlot, f, Makie.HyperRectangle(0.0,0.0,1.0,1.0),(20,20), 0.01, 500, 1.0)[1]
+    arrplt = arrows!(para, Point.(Apos), f.(Apos) ./1000, arrowcolor = sum.([abs.(x) for x in f.(Apos)]), colormap = :plasma)
+
+    trans = Axis(fig[1,2],title = "Parasite with interspecific transmission", xlabel = "ωA = 0.9, β = 0.1,0.005", ylabel = "ωA = 0.9, β = 0.1,0.005", backgroundcolor = :black)
+    p = vcat([0.9,1.0,0.1,0.005]',[0.9,1.0,0.005,0.1]')
+    stplt2 = streamplot!(trans, f, 0..1, 0..1, colormap = :plasma,
+        gridsize= (20,20), arrow_size = 0) # set arrow size = 0
+    Apos = Makie.streamplot_impl(StreamPlot, f, Makie.HyperRectangle(0.0,0.0,1.0,1.0),(20,20), 0.01, 500, 1.0)[1]
+    arrplt2 = arrows!(trans, Point.(Apos), f.(Apos) ./1000, arrowcolor = sum.([abs.(x) for x in f.(Apos)]), colormap = :plasma)
+
+    mut = Axis(fig[1,3],title = "One host benefits", xlabel = "ωA = 1.1, β = 0.1,0.05", ylabel = "ωA = 0.9, β = 0.1,0.05", backgroundcolor = :black)
+    p = vcat([1.1,1.0,0.1,0.05]',[0.9,1.0,0.05,0.1]')
+    stplt3 = streamplot!(mut, f, 0..1, 0..1, colormap = :plasma,
+        gridsize= (20,20), arrow_size = 0) # set arrow size = 0
+    Apos = Makie.streamplot_impl(StreamPlot, f, Makie.HyperRectangle(0.0,0.0,1.0,1.0),(20,20), 0.01, 500, 1.0)[1]
+    arrplt3 = arrows!(mut, Point.(Apos), f.(Apos) ./1000, arrowcolor = sum.([abs.(x) for x in f.(Apos)]), colormap = :plasma)
+
+     fig
+```
+
+Looking at the first two panels, we see the potential for a small amout of interspecific transmission to move the equilibrum (parasitic) symbiont density 
+from 0 to $\approx$ 0.5 for both species. Then comparing panels 2 and 3 we see that when the symbiont benefits one of the species but all other parameters are held constant, the 
+species that bebnfits is not only fully infected but it drags the symbiont frequency up to $\approx 1$ in the other host species as well.
+
+## Multi-host community
+```julia
+function multi(du,u,p,t)
+    """
+    p = wa, wb, transmisssion matrix
+    Diagonal elements of the transmission matrix are intraspecific,
+    and each element i,j is the transmission rate to species i from species j 
+    """
+    transmission = vec((sum(p[3] .*u',dims = 2)  ) .* (1 .- u))
+     du .= u .+ (u .*(1 .-u) .*(p[1] .-p[2])) ./ ((u .*p[1]) .+ ((1 .-u) .*p[2])) .+ transmission
+end
+```
+
+In each simulation in the paper 10 host species were assigned either ωA or ωB = 1, 
+for mutualistic and parasitic interactions respectively, while the remaining
+ fitness parameter was drawn from a random uniform distribution between 0 and 1. β 
+ values for were drawn from half-normal distributions located at 0, with separate standard 
+deviations for interspecific and intraspecific transmission: between 0 and 0.1 for
+ intraspecific transmission and 0 and 0.05 for interspecific transmission. The number of
+  mutualistic interactions in a given simulation run is defined as the number of host 
+  species for which ωA > ωB. After 1,000 generations symbiont generalism was calculated as G = 2Hj, 
+  with Hj being the Shannon diversity of symbiont prevalence across hosts 
+
+We will use a couple of helper functions to get the parameters for each simulation.
+
+```julia
+
+function ws(n ::Int64,nMut ::Int64)
+    """
+    Returns a tuple containing a vector for wA and for wB.
+    wA values will be greater than corresponding wB values nMut times.
+    """
+    return vcat(fill(1.0,nMut),rand(Uniform(0.5,1),n-nMut)), vcat(rand(Uniform(0.5,1),nMut),fill(1.0,n-nMut))
+end
+
+function betas(n ::Int64,μ::Float64,σ ::Float64)
+    """
+    Returns transmission rate matrix with interspecific values drawn from half-normal N(0,σ)
+    and intraspecific values twice as high on average.
+    """
+    β = rand(truncated(Normal(μ,σ),0,Inf),n,n)
+    β[diagind(β)] .*= 2 #intraspecific transmission should be more common
+    return β
+end
+```
+
+Now we can define a function to run simulations and return an array of final symbiont prevalence.
+
+```julia
+function run_sim(nHost ::Int64,nSim ::Int64,σ = 0.05, t =1000.0)
+    prob = DiscreteProblem(multi,rand(nHost),(0.0,t), #this will be remade with new values each iteration
+    p = [rand(nHost),rand(nHost),rand(nHost,nHost),nHost])
+    data = Array{Float64}(undef,nSim*(nHost+1),nHost +2) # creating an empty array and filling it is faster 
+							 # than increasing the array size with each iteration
+    row = 1
+    for m in 0:nHost
+        w = ws(nHost,m)
+        for i in 1:nSim
+            μ = rand(Uniform(0,0.05))
+            σ = rand(Uniform(0,0.05))
+            β = betas(nHost,μ,σ) 
+            prob = remake(prob,u0 = fill(0.001,nHost),
+                                p = [w..., β])
+            hyperParams = [m,mean(β)]
+            data[row,:] = vcat(hyperParams...,solve(prob,saveon = false).u[end])
+            row +=1
+        end
+    end
+    return data
+end
+```
+
+Given this output, we can calculate connectance as the number of actual
+host-symbiont interactions, divided by the number of possible interactions. 
+Now the way the model is set up, you will never get a symbiont prevalence of
+0 for any given host species, since the symbionts presence in the community means here will 
+always be some small amount of interspecific transmission, even if the symbiont can never
+ establish itself and spread within a particular host population. Here we use 
+an arbitrary cut-off symbiont prevalence of 0.001 for *biologically significant* interactions. In 
+addition to calculating connectance, we want to know the *generality* of th host-symbiont network 
+in each case, i.e. how evenly spread is the symbiont between the various hosts. There are numerous ways 
+to calculate this. Here we use the Shannons Index of symbiont prevalence across the various host species $G = 2H$, where 
+$$
+H=-\sum_{i=1}^{I}\left(\frac{a_{i}}{A} \cdot \ln \frac{a_{i}}{A}\right).
+$$
+
+Here $a_{i}$ is the frequency of the symbiont within specie $i$ and $A = \sum a$
+
+```julia
+function shannon(a, n ::Int64)
+    A = sum(a)
+    H = -sum([(a[i]/A) * log(a[i]/A) for i in 1:n])
+    return isnan(H) ? 0 : 2* H
+end
+
+function getResults(data ::Matrix, cutoff = 0.001, n = 10)
+    M = data[:,1]
+    β = data[:,2]
+    x = data[:,3:end]
+    x[x .< 0] .= 0
+    C = sum(x .> cutoff, dims = 2) ./n
+    G = [shannon(row,n) for row in eachrow(x)]
+    return DataFrame(hcat(M,β,C,G), [:M,:β,:C,:G])
+end 
+```
+
+If you are unsure of what the question mark is doing in the shannon function, see details on the ternary operator
+[here](https://docs.julialang.org/en/v1/manual/control-flow/#man-conditional-evaluation). Everything is in place now to run some simulations.
+
+```julia 
+data = run_sim(10,1000)
+df = getResults(data);
+df = df[df.β .< 0.05,:]
+CSV.write("discdat.csv",df);
+```
+
+
+Now lets put the data in bins and plot a heatmap.
+
+
+```julia results = "html"
+function zVals(y,x,z,cuts = 10)
+    counts = fit(Histogram, (x,y) ,nbins = cuts)
+    vals = fit(Histogram, (x,y),Weights(z),nbins=cuts)
+    return collect(vals.edges[1]),collect(vals.edges[2]), vals.weights ./counts.weights   
+end
+
+update_theme!(theme_minimal())
+fig = Figure(resolution =(1100,550))
+axG = Axis(fig[2, 1], title = "Generality")
+gg = heatmap!(axG, zVals(df.M, df.β, df.G,10)...)
+Colorbar(fig[1, 1], gg, vertical = false)
+axC = Axis(fig[2, 2], title = "Connectance")
+cc = heatmap!(axC, zVals(df.M, df.β, df.C,10)...)
+Colorbar(fig[2, 3], cc)
+fig
+```
+Both generality and connectance increase with the number of mutualistic interactions and the mean transmission rate. 
+In particular connectance increases rapidly moving from 0 to 1 mutualistic interaction.

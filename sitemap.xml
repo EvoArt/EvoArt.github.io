@@ -2,12 +2,6 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
 <url>
-    <loc>https://tlienart.github.io/FranklinTemplates.jl/mymods/symbiont/index.html</loc>
-    <lastmod>2021-08-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-</url>
-<url>
     <loc>https://tlienart.github.io/FranklinTemplates.jl/index.html</loc>
     <lastmod>2021-08-10</lastmod>
     <changefreq>monthly</changefreq>
@@ -15,6 +9,12 @@
 </url>
 <url>
     <loc>https://tlienart.github.io/FranklinTemplates.jl/BDA/ch2/index.html</loc>
+    <lastmod>2021-08-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://tlienart.github.io/FranklinTemplates.jl/mymods/symbiont_weaver/index.html</loc>
     <lastmod>2021-08-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
@@ -57,6 +57,12 @@
 </url>
 <url>
     <loc>https://tlienart.github.io/FranklinTemplates.jl/box_2_1/</loc>
+    <lastmod>2021-08-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://tlienart.github.io/FranklinTemplates.jl/mymods/symbiont_woven/</loc>
     <lastmod>2021-08-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
