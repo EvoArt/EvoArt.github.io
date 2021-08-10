@@ -1,0 +1,134 @@
+
+
+```julia
+using DifferentialEquations,WGLMakie, JSServe
+Page(exportable=true, offline=true)
+```
+
+# Model 1
+Construct and solve and ODE problem to calculate the change in X over time
+```julia results = "html"
+
+function model1(du,u,p,t)
+    M, K = p
+    X,V = u
+    du[1] = V
+    du[2] = -K*X/M
+    
+end
+M,K = 1.0,0.5
+u0 = [0.5,1.0]
+p = [M,K]
+# construct an ODE problem
+prob = ODEProblem(model1,u0,(1.0,20.0),p)
+# solve using Tsitouras 5/4 Runge-Kutta method
+sol = solve(prob, Tsit5(), saveat = 0.01);
+```
+Calculate the change in position and velocity for any given current position 
+and velocity. Confusingly enough, $X$ is in the $y$ direction. As it's a spring, 
+it feels intuitve to model its displacement vervically.
+```julia
+points = vec(Point.([-1:0.1:1]...,[-1:0.1:1]'...))
+    f((x,y)) = (-K*y/M,x) ./ (sum(abs.((-K*y/M,x))) * 20)
+    c((x,y)) = sum(abs.((-K*y/M,x)))
+```
+Put them together in a plot
+```julia
+fig = Figure(resolution = (1600,800))
+    
+    lines(fig[1,1],sol.t,hcat(sol.u...)[1,:], 
+    axis = (
+        xlabel = L"t",
+        ylabel = L"X"
+    ),
+)
+   arrows(fig[1,2],points,f.(points) , color = c.(points), 
+    axis = (
+        xlabel = L"\frac{dx^{2}}{dt^{2}}",
+        ylabel = L"X"
+    ),
+)
+fig[0, :] = Label(fig, L"\frac{dx^{2}}{dt^{2}} = -\frac{KX}{M}",
+    textsize = 24)
+fig
+```
+
+# Model 2
+Construct and solve and ODE problem to calculate the change in X over time
+```julia
+
+function model2(du,u,p,t)
+    M, K, K₁ = p
+    X,V = u
+    du[1] = V
+    du[2] = (-K*X- K₁*V)/M  
+end
+K₁ = 0.5
+u0 = [0.5,1.0]
+p = [M,K,K₁]
+prob = ODEProblem(model2,u0,(1.0,20.0),p)
+sol = solve(prob, Tsit5(), saveat = 0.01);
+```
+Calculate the change in position and velocity for any given current position 
+and velocity
+```julia
+points = vec(Point.([-1:0.1:1]...,[-1:0.1:1]'...))
+    k = 2
+    m = 1
+    f2((x,y)) = ((-K*y- K₁*x)/M,x) ./ (sum(abs.(((-K*y- K₁*x)/M,x))) * 20)
+    c2((x,y)) = sum(abs.(((-K*y- K₁*x)/M,x)))
+```
+
+Put them together in a plot with a slider to control the $K_{1}$ value.
+```julia 
+App() do session::Session
+    K₁_slider = Slider(0.0:0.01:3.0)
+    fig = Figure(resolution = (1600,800))
+    t = sol.t
+
+    # We need to map a few differnt elements to the slider.
+    # I'm sure there's a more succinct way of doing this.
+    # But the following code gets the job done.
+
+    # map diferential equation solution to slider
+    u = map(K₁_slider) do val  
+        Nprob = remake(prob, p = [M,K,val])
+        sol = solve(Nprob, Tsit5(), saveat = 0.01)
+        return hcat(sol.u...)[1,:]
+    end
+    # map arrow directions to slider
+    dirs = map(K₁_slider) do val 
+        K₁ = val 
+        f2((x,y)) = ((-K*y- K₁*x)/M,x) ./ (sum(abs.(((-K*y- K₁*x)/M,x))) * 20)
+        return f2.(points)
+    end
+    # map arrow colours to slider
+    cols = map(K₁_slider) do val 
+        K₁ = val 
+        c2((x,y)) = sum(abs.(((-K*y- K₁*x)/M,x)))
+        return c2.(points)
+    end
+
+    lines(fig[1,1],t,u, 
+    axis = (
+        xlabel = L"t",
+        ylabel = L"X"
+    ),
+)
+   arrows(fig[1,2],points,dirs , color = cols, 
+    axis = (
+        xlabel = L"\frac{dx^{2}}{dt^{2}}",
+        ylabel = L"X"
+    ),
+)
+fig[0, :] = Label(fig, L"\frac{dx^{2}}{dt^{2}} = \frac{-KX - K_{1}V}{M}",
+    textsize = 24)
+fig
+
+    slider = DOM.div("K₁: ", K₁_slider, K₁_slider.value)
+    return JSServe.record_states(session, DOM.div(slider, fig))
+end
+
+```
+
+As you can see, setting the slider to zero recapture model 1.
