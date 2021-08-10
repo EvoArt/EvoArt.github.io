@@ -4,9 +4,9 @@
 using DifferentialEquations,WGLMakie, JSServe
 Page(exportable=true, offline=true)
 ```
-
 # Model 1
-Construct and solve and ODE problem to calculate the change in X over time
+Construct and solve and ODE problem to calculate the change in the position $X$ of a weight on a spring over time. 
+I have rearranged the equation from the book to model the position $X$ rather than the force acting on it.
 ```julia results = "html"
 
 function model1(du,u,p,t)
@@ -54,7 +54,9 @@ fig
 ```
 
 # Model 2
-Construct and solve and ODE problem to calculate the change in X over time
+
+Construct and solve and ODE problem to calculate the change in $X$ over time. This time with 
+a damping parameter $K_{1}$.
 ```julia
 
 function model2(du,u,p,t)

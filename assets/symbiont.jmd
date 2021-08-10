@@ -12,6 +12,7 @@ using DifferentialEquations, Distributions, CSV,
 DataFrames,LinearAlgebra,Colors,StatsBase
 using JSServe, WGLMakie
 set_theme!(theme_dark())
+update_theme!(Theme(textcolor = :white))
 Page(exportable=true, offline=true)
 ```
 
@@ -86,7 +87,9 @@ fig
 
 ```
  As we can see, there is a narrow range in which internal eqilibria exist and
-  the equilibrium frequency changes rapidly with relative fitness.
+  the equilibrium frequency changes rapidly with relative fitness. Incidentally, we can 
+  also see that the 3d plot is fairly pointless here, although it arguably gives a better idea 
+  of the sharp increase/decrease in $p^{*}$.
 
 
 # Multiple hosts
@@ -271,6 +274,7 @@ df = getResults(data);
 df = df[df.β .< 0.05,:]
 CSV.write("discdat.csv",df);
 ```
+
 
 
 Now lets put the data in bins and plot a heatmap.
