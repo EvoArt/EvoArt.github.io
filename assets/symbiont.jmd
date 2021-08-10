@@ -187,16 +187,16 @@ function ws(n ::Int64,nMut ::Int64)
     Returns a tuple containing a vector for wA and for wB.
     wA values will be greater than corresponding wB values nMut times.
     """
-    return vcat(fill(1.0,nMut),rand(Uniform(0.5,1),n-nMut)), vcat(rand(Uniform(0.5,1),nMut),fill(1.0,n-nMut))
+    return vcat(fill(1.0,nMut),rand(Uniform(0.1,1),n-nMut)), vcat(rand(Uniform(0.1,1),nMut),fill(1.0,n-nMut))
 end
 
-function betas(n ::Int64,μ::Float64,σ ::Float64)
+function betas(n,μ,σintra,σinter)
     """
     Returns transmission rate matrix with interspecific values drawn from half-normal N(0,σ)
     and intraspecific values twice as high on average.
     """
-    β = rand(truncated(Normal(μ,σ),0,Inf),n,n)
-    β[diagind(β)] .*= 2 #intraspecific transmission should be more common
+    β = rand(truncated(Normal(μ,σinter),0,Inf),n,n)
+    β[diagind(β)] .= rand(truncated(Normal(μ,σintra),0,Inf),n) #intraspecific transmission should be more frequent
     return β
 end
 ```
@@ -204,23 +204,24 @@ end
 Now we can define a function to run simulations and return an array of final symbiont prevalence.
 
 ```julia
-function run_sim(nHost ::Int64,nSim ::Int64,σ = 0.05, t =1000.0)
+function run_sim(nHost,nSim, t =1000.0)
     prob = DiscreteProblem(multi,rand(nHost),(0.0,t), #this will be remade with new values each iteration
     p = [rand(nHost),rand(nHost),rand(nHost,nHost),nHost])
     data = Array{Float64}(undef,nSim*(nHost+1),nHost +2) # creating an empty array and filling it is faster 
 							 # than increasing the array size with each iteration
-    row = 1
-    for m in 0:nHost
+    #row = 1
+    Threads.@threads for m in 0:nHost # run simulations in parallel
         w = ws(nHost,m)
-        for i in 1:nSim
+         for row in (nSim*m+1):(nSim*(m+1))
             μ = rand(Uniform(0,0.05))
-            σ = rand(Uniform(0,0.05))
-            β = betas(nHost,μ,σ) 
+            σintra =  rand(Uniform(0,0.1))
+            σinter = rand(Uniform(0,0.05))
+            β = betas(nHost,0.0,σintra,σinter) 
             prob = remake(prob,u0 = fill(0.001,nHost),
                                 p = [w..., β])
             hyperParams = [m,mean(β)]
             data[row,:] = vcat(hyperParams...,solve(prob,saveon = false).u[end])
-            row +=1
+            
         end
     end
     return data
@@ -233,7 +234,7 @@ Now the way the model is set up, you will never get a symbiont prevalence of
 0 for any given host species, since the symbionts presence in the community means here will 
 always be some small amount of interspecific transmission, even if the symbiont can never
  establish itself and spread within a particular host population. Here we use 
-an arbitrary cut-off symbiont prevalence of 0.001 for *biologically significant* interactions. In 
+an arbitrary cut-off symbiont prevalence of 0.005 for *biologically significant* interactions. In 
 addition to calculating connectance, we want to know the *generality* of th host-symbiont network 
 in each case, i.e. how evenly spread is the symbiont between the various hosts. There are numerous ways 
 to calculate this. Here we use the Shannons Index of symbiont prevalence across the various host species $G = 2H$, where 
@@ -244,19 +245,19 @@ $$
 Here $a_{i}$ is the frequency of the symbiont within specie $i$ and $A = \sum a$
 
 ```julia
-function shannon(a, n ::Int64)
+function shannon(a, n)
     A = sum(a)
     H = -sum([(a[i]/A) * log(a[i]/A) for i in 1:n])
     return isnan(H) ? 0 : 2* H
 end
 
-function getResults(data ::Matrix, cutoff = 0.001, n = 10)
+function getResults(data, cutoff = 0.005, n = 10)
     M = data[:,1]
     β = data[:,2]
     x = data[:,3:end]
     x[x .< 0] .= 0
     C = sum(x .> cutoff, dims = 2) ./n
-    G = [shannon(row,n) for row in eachrow(x)]
+    G = [shannon(row[row .> cutoff],sum(row .> cutoff)) for row in eachrow(x)]
     return DataFrame(hcat(M,β,C,G), [:M,:β,:C,:G])
 end 
 ```
@@ -265,7 +266,7 @@ If you are unsure of what the question mark is doing in the shannon function, se
 [here](https://docs.julialang.org/en/v1/manual/control-flow/#man-conditional-evaluation). Everything is in place now to run some simulations.
 
 ```julia 
-data = run_sim(10,10000)
+data = run_sim(10,1000)
 df = getResults(data);
 df = df[df.β .< 0.05,:]
 CSV.write("discdat.csv",df);
@@ -276,7 +277,7 @@ Now lets put the data in bins and plot a heatmap.
 
 
 ```julia results = "html"
-function zVals(y,x,z,cuts = 10)
+function zVals(y,x,z,cuts = 11)
     counts = fit(Histogram, (x,y) ,nbins = cuts)
     vals = fit(Histogram, (x,y),Weights(z),nbins=cuts)
     return collect(vals.edges[1]),collect(vals.edges[2]), vals.weights ./counts.weights   
@@ -285,12 +286,15 @@ end
 update_theme!(theme_minimal())
 fig = Figure(resolution =(1100,550))
 axG = Axis(fig[2, 1], title = "Generality")
-gg = heatmap!(axG, zVals(df.M, df.β, df.G,10)...)
+gg = heatmap!(axG, zVals(df.M, df.β, df.G,11)...)
 Colorbar(fig[1, 1], gg, vertical = false)
 axC = Axis(fig[2, 2], title = "Connectance")
-cc = heatmap!(axC, zVals(df.M, df.β, df.C,10)...)
+cc = heatmap!(axC, zVals(df.M, df.β, df.C,11)...)
 Colorbar(fig[2, 3], cc)
 fig
 ```
 Both generality and connectance increase with the number of mutualistic interactions and the mean transmission rate. 
-In particular connectance increases rapidly moving from 0 to 1 mutualistic interaction.
+In particular connectance increases rapidly moving from 0 to 1 mutualistic interaction. Notice that β is very small in all 
+simulations used here. As we saw in the 1-host and 2-host plots, a little horizontal transmission goes a long way. Thus the importance 
+of fitness effects on the resulting host-symbiont network are mainly relevant when horizontal transmission is rare compared to 
+veritical transmission.
