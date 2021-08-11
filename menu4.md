@@ -12,7 +12,5 @@ Here I will be working through the problem sets from  [Mathematical Models of So
 
 
 
-## [Chapter 1](/socialevo/problems-1/index.html)
-## [Chapter 2](/socialevo/problems-2/index.html)
-
-There's not a lot of maths here, so I've just included a bit of visualisation to go with [Box 2.1](/ecodetect/box_2_1/index.html)
+## [Chapter 1](/socialevo/problems-1.pdf)
+## [Chapter 2](/socialevo/problems-2.pdf)
