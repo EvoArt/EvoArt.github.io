@@ -1,5 +1,5 @@
 +++
-title = "Ecological Detective"
+title = "Mathematical Models of Social Evolution"
 hascode = true
 date = Date(2019, 3, 22)
 rss = "These pages won't have much text. All the text is in the book. This is just for implementation (code) details."
@@ -13,4 +13,4 @@ Here I will be working through the problem sets from  [Mathematical Models of So
 
 
 ## [Chapter 1](/socialevo/problems-1.pdf)
-## [Chapter 2](/socialevo/problems-2.pdf)
+
