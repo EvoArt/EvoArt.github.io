@@ -7,10 +7,7 @@
 @def tags = ["syntax", "code", "image"]
 # Models used in my research
 
-\toc
 
-
-## [Symbiont Network Dynamics](/mymods/symbiont/index.html)
 ## [Symbiont Network Dynamics](/mymods/symbiont_woven/index.html)
 
-\fig{/rolling_ball_2.gif}
+[\fig{/rolling_ball_2.gif}](https://en.wikipedia.org/wiki/Spherical_cow)

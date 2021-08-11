@@ -10,7 +10,7 @@ rss = "These pages won't have much text. All the text is in the book. This is ju
 
 Here I will be working through the problem sets from  [Mathematical Models of Social Evolution](https://press.uchicago.edu/ucp/books/book/chicago/M/bo4343149.html), by Richard McElreath and Robert Boyd. 
 
-\toc
+
 
 ## [Chapter 1](/socialevo/problems-1/index.html)
 ## [Chapter 2](/socialevo/problems-2/index.html)
