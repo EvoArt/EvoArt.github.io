@@ -12,12 +12,13 @@ using DifferentialEquations, Distributions, CSV,
 DataFrames,LinearAlgebra,Colors,StatsBase
 using JSServe, WGLMakie
 set_theme!(theme_dark())
+update_theme!(Theme(textcolor = :white))
 Page(exportable=true, offline=true)
 ```
 
 This page gives a brief overview of a model (used in a recently submitted [paper](nolinkyet)) of symbiont population dynamics due to both horizontal and 
-verical transmission. The model is a discrete time difference equation, used to descibe how the fitness effects a symbiont has on its hosts will affect 
-the structure of host-symbiont interaction networks. In particular we are interested on the impact of mutualistic vs antagonistic interations on 
+vertical transmission. The model is a discrete time difference equation, used to descibe how the fitness effects a symbiont has on its hosts will affect 
+the structure of host-symbiont interaction networks. In particular we are interested in the impact of mutualistic vs antagonistic interations on 
 the spread of a symbiont through a community of hosts.
 
 # Single host species
@@ -36,7 +37,7 @@ uninfected and infected hosts. The second term is the change in frequency of sym
 This can be formulated as a differential equation problem to solve using [DifferentialEquations.jl](https://diffeq.sciml.ai/stable/), like so.
 
 ```julia results = "html"
-#define a function that computes the derivative(s) wrt cureent value(s)
+#define recursion equation as a function
 function Δp(du,u,p,t)
     """
     p = ωA, ωB, β
@@ -52,7 +53,7 @@ prob = DiscreteProblem(Δp,u0,(1.0,100.0),p)
 # solve using the discrete problem solver
 sol = solve(prob);
 # plot
-lines(sol.t,vcat(sol.u...))
+lines(sol.t,vcat(sol.u...), linewidth = 4)
 ```
 The system is at equilibrium when selection balances transmission, i.e. when $p=\frac{\omega B}{\omega B-\omega A}-\frac{1}{\beta}$.
   Since $p$ must lie between zero and 1, feasible internal equilibria exist only when 
@@ -76,16 +77,19 @@ P[P .>1.0] .= 1.0
 # plot the results in a figure environment containing an interactive (well you can rotate it)
 # 3d surface plot and a heatmap.
 fig = Figure(resolution = (935, 465))
-scene3d = LScene(fig[1, 1], scenekw = (camera = cam3d!, raw = false))
+scene3d = LScene(fig[1, 1], scenekw = (camera = cam3d!, raw = false),
+xlabel = "Beta",ylabel = "wA")
 ax = Axis(fig[1, 2],xlabel = L"\beta",ylabel = L"wA")
-surf = surface!(scene3d,β,ωA,P)
+surf = surface!(scene3d,β,ωA,P,xlabel = "Beta",ylabel = "wA")
 heat = heatmap!(ax,β,ωA,P)
 Colorbar(fig[1, 3], heat,label = L"p^{*}")
 fig
 
 ```
  As we can see, there is a narrow range in which internal eqilibria exist and
-  the equilibrium frequency changes rapidly with relative fitness.
+  the equilibrium frequency changes rapidly with relative fitness. Incidentally, we can 
+  also see that the 3d plot is fairly pointless here, although it arguably gives a better idea 
+  of the sharp increase/decrease in $p^{*}$.
 
 
 # Multiple hosts
@@ -126,7 +130,7 @@ If you are confused by defining two functions with the same name, see [here](htt
 ```julia results = "html"
     fig = Figure(resolution = (1100, 367), fontsize = 18, font = "sans")
   
-    para = Axis(fig[1,1],title = "Parasite without interspecific transmission", xlabel = "ωA = 0.9, β = 0.1,0.0", ylabel = "ωA = 0.9, β = 0.1,0.0", backgroundcolor = :black)
+    para = Axis(fig[1,1],title = "Parasite, no interspecific transmission", xlabel = "ωA = 0.9, β = 0.1,0.0", ylabel = "ωA = 0.9, β = 0.1,0.0", backgroundcolor = :black)
     p = vcat([0.9,1.0,0.1,0.0]',[0.9,1.0,0.0,0.1]')
     stplt = streamplot!(para, f, 0..1, 0..1, colormap = :plasma,
         gridsize= (20,20), arrow_size = 0) # set arrow size = 0
@@ -186,16 +190,16 @@ function ws(n ::Int64,nMut ::Int64)
     Returns a tuple containing a vector for wA and for wB.
     wA values will be greater than corresponding wB values nMut times.
     """
-    return vcat(fill(1.0,nMut),rand(n-nMut)), vcat(rand(nMut),fill(1.0,n-nMut))
+    return vcat(fill(1.0,nMut),rand(Uniform(0.1,1),n-nMut)), vcat(rand(Uniform(0.1,1),nMut),fill(1.0,n-nMut))
 end
 
-function betas(n ::Int64,μ::Float64,σ ::Float64)
+function betas(n,μ,σintra,σinter)
     """
     Returns transmission rate matrix with interspecific values drawn from half-normal N(0,σ)
     and intraspecific values twice as high on average.
     """
-    β = rand(truncated(Normal(μ,σ),0,Inf),n,n)
-    β[diagind(β)] .*= 2 #intraspecific transmission should be more common
+    β = rand(truncated(Normal(μ,σinter),0,Inf),n,n)
+    β[diagind(β)] .= rand(truncated(Normal(μ,σintra),0,Inf),n) #intraspecific transmission should be more frequent
     return β
 end
 ```
@@ -203,22 +207,24 @@ end
 Now we can define a function to run simulations and return an array of final symbiont prevalence.
 
 ```julia
-function run_sim(nHost ::Int64,nSim ::Int64,σ = 0.05, t =1000.0,mumin = 0, mumax = 0.05)
+function run_sim(nHost,nSim, t =5000.0)
     prob = DiscreteProblem(multi,rand(nHost),(0.0,t), #this will be remade with new values each iteration
     p = [rand(nHost),rand(nHost),rand(nHost,nHost),nHost])
     data = Array{Float64}(undef,nSim*(nHost+1),nHost +2) # creating an empty array and filling it is faster 
 							 # than increasing the array size with each iteration
-    row = 1
-    for m in 0:nHost
+    #row = 1
+    Threads.@threads for m in 0:nHost # run simulations in parallel
         w = ws(nHost,m)
-        for i in 1:nSim
-            μ = rand(Uniform(mumin,mumax))
-            β = betas(nHost,μ,σ) 
-            prob = remake(prob,u0 = fill(0.01,nHost),
+         for row in (nSim*m+1):(nSim*(m+1))
+            μ = rand(Uniform(0,0.05))
+            σintra =  rand(Uniform(0,0.1))
+            σinter = rand(Uniform(0,0.05))
+            β = betas(nHost,0.0,σintra,σinter) 
+            prob = remake(prob,u0 = fill(0.001,nHost),
                                 p = [w..., β])
             hyperParams = [m,mean(β)]
             data[row,:] = vcat(hyperParams...,solve(prob,saveon = false).u[end])
-            row +=1
+            
         end
     end
     return data
@@ -242,13 +248,13 @@ $$
 Here $a_{i}$ is the frequency of the symbiont within specie $i$ and $A = \sum a$
 
 ```julia
-function shannon(a, n ::Int64)
+function shannon(a, n)
     A = sum(a)
     H = -sum([(a[i]/A) * log(a[i]/A) for i in 1:n])
     return isnan(H) ? 0 : 2* H
 end
 
-function getResults(data ::Matrix, cutoff = 0.01, n = 10)
+function getResults(data, cutoff = 0.005, n = 10)
     M = data[:,1]
     β = data[:,2]
     x = data[:,3:end]
@@ -263,17 +269,19 @@ If you are unsure of what the question mark is doing in the shannon function, se
 [here](https://docs.julialang.org/en/v1/manual/control-flow/#man-conditional-evaluation). Everything is in place now to run some simulations.
 
 ```julia 
-data = run_sim(10,10000)
+data = run_sim(10,1000)
 df = getResults(data);
+df = df[df.β .< 0.05,:]
 CSV.write("discdat.csv",df);
 ```
+
 
 
 Now lets put the data in bins and plot a heatmap.
 
 
 ```julia results = "html"
-function zVals(y,x,z,cuts = 10)
+function zVals(y,x,z,cuts = 11)
     counts = fit(Histogram, (x,y) ,nbins = cuts)
     vals = fit(Histogram, (x,y),Weights(z),nbins=cuts)
     return collect(vals.edges[1]),collect(vals.edges[2]), vals.weights ./counts.weights   
@@ -282,12 +290,15 @@ end
 update_theme!(theme_minimal())
 fig = Figure(resolution =(1100,550))
 axG = Axis(fig[2, 1], title = "Generality")
-gg = heatmap!(axG, zVals(df.M, df.β, df.G,10)...)
-#Colorbar(fig[1, 1], gg, vertical = false)
+gg = heatmap!(axG, zVals(df.M, df.β, df.G,11)...)
+Colorbar(fig[1, 1], gg, vertical = false)
 axC = Axis(fig[2, 2], title = "Connectance")
-cc = heatmap!(axC, zVals(df.M, df.β, df.C,10)...)
-#Colorbar(fig[2, 3], cc)
+cc = heatmap!(axC, zVals(df.M, df.β, df.C,11)...)
+Colorbar(fig[2, 3], cc)
 fig
 ```
 Both generality and connectance increase with the number of mutualistic interactions and the mean transmission rate. 
-In particular connectance increases rapidly moving from 0 to 1 mutualistic interaction.
+In particular connectance increases rapidly moving from 0 to 1 mutualistic interaction. Notice that β is very small in all 
+simulations used here. As we saw in the 1-host and 2-host plots, a little horizontal transmission goes a long way. Thus the importance 
+of fitness effects on the resulting host-symbiont network are mainly relevant when horizontal transmission is rare compared to 
+veritical transmission.

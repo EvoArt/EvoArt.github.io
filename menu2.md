@@ -5,10 +5,12 @@
 @def rss_pubdate = Date(2019, 5, 1)
 
 @def tags = ["syntax", "code", "image"]
-
 # Models used in my research
 
 \toc
 
 
 ## [Symbiont Network Dynamics](/mymods/symbiont/index.html)
+## [Symbiont Network Dynamics](/mymods/symbiont_woven/index.html)
+
+\fig{/rolling_ball_2.gif}

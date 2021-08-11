@@ -1,0 +1,271 @@
+```julia
+using Plots, Symbolics, SymPy, Latexify
+Latexify.set_default(; starred=true)
+```
+Chapter 2 introduces ternary plots, which are pretty nifty. We are not asked to use them 
+in the problem set. But they may be handy. So here is a pretty rough implementation.
+
+Draw an equilateral triangle with sides of length 1 and labe the corners.
+```julia
+function ternPlot(labs)
+    plot([0,0.5,1,0],[0,sqrt(0.75),0,0],ticks = false, showaxis = false,
+    xlims = (-0.2,1.2), ylims = (-0.1,1), label = false,color =:black)
+    annotate!(-0.05, -0.05, text(labs[1], :black, :right, 9))
+    annotate!(0.5, sqrt(0.8)+0.05, text(labs[2], :black, :center, 9))
+    annotate!(1.05, -0.05, text(labs[3], :black, :left, 9))
+end
+```
+This function converts vectors of cartesian coordinates to barrycentric coordinates.
+```julia
+tern(x,y) = sqrt(0.75) .*  x, y .+ 0.5 .* x
+```
+Using the above helper function, we can plot trajectories on the triangle. The trajecory function 
+will take in initial $p$ and $q$ values along with the the model to be plotted, and any aditional arguments 
+needed to compute the trajectory). It then plots the trajectory on to th previously generated triangular axes.
+```julia
+function addTrajectory(mod, mod_args, p,q)
+    P = [p]
+    Q = [q]
+    while sum(abs.((p,q) .-  mod(p,q,mod_args))) > 0.001
+        p, q = mod(p,q,mod_args)
+        push!(P,p)
+        push!(Q,q)
+    end
+    y,x = tern(P,Q)
+    if length(P) > 2
+        i = length(P) ÷ 2
+        j = i - 1    
+        plot!(x,y, color = :black, label = false)
+        quiver!([x[j]],[y[j]], quiver=([x[i]-x[j]],
+        [y[i]-y[j]]), color = :black, arrow=(:closed, 2.0))
+    end
+end
+```
+Now we can test it out on the hawk dove retaliator model from the book.
+```julia
+function HawkDoveRetaliator(p,q,args)
+    v,c,w0 = args
+    WH = w0 + (p+q)*(v-c)/2 + (1-p-q)*v
+    WD = w0 + (1-p)*v/2
+    WR = w0 +p*(v-c)/2 +(1-p)*v/2
+    return p*WH /sum([p*WH,(1-p-q) *WD,q*WR]), 
+    q*WR/sum([p*WH,(1-p-q) *WD,q*WR])
+end
+```
+
+```julia 
+plt = ternPlot(("Dove","Hawk","Retaliator"))
+for p in 0.0:0.2:1
+    for q in 0:0.2:(1-p)
+        addTrajectory(HawkDoveRetaliator,(2,3,5), p,q)
+    end
+end
+display(plt)
+```
+Lot's of room for improvement. But heading in the right direction
+
+# Conflict as cooperation
+
+
+The payoffs are as follows
+```julia
+latexify(["" "Rest" "Wash"
+"Rest" 0 "b"
+ "Wash"   "b-k" "b-k/2"])
+```
+
+We are to show that
+$$
+V(H|H) <V(D|H) < V(D|D) < V(H|D)
+$$
+given that Wash = $D$ and Rest = $H$ i.e.,
+$$
+V(R|R) <V(W|R) < V(W|W) < V(R|W)
+$$
+
+We can do this in base Julia by plugging in values.
+```julia
+V(self,other) = payoffTable[self,other]
+b = 2
+k = 1
+R = 1
+W = 2
+payoffTable = [0 b
+                b-k b-k/2]
+V(R,R) < V(W,R) < V(W,W) <V(R,W)
+```
+This has the advantage of using nice syntax i.e., chaning inequalities. But it's not satisfactory, 
+as we are unable to prove that the inequalit holds for a range of values. We can hack together a function 
+with **solve_for** at its core, or make use of interval arithmatic and polyhedra... But the simplest solutions for now 
+is to use Sympy.jl. I prefer a pure Julia solution where possible, but Symbolics just doesn't have all 
+the functionality of SymPy yet.
+
+```julia
+
+SymPy.@syms b k #we specify SymPy, as both Symbolics and Sympy export "@syms"
+payoffTable = [0 b  # redefine the payoff table with our Sympy.syms
+                b-k b-k/2]
+fitness = [V(R,R),V(W,R),V(W,W),V(R,W)]
+fitness
+```
+We can solve an inequality $x < y$ in SymPy by first calling expr = LessThan(x,y), then solve(expr). 
+Since we have a chain of inequalities, I'm going to use list comprehension to make a vector of "less than" expressions and 
+then *broadcast* the solve function.
+
+```julia
+G = [LessThan(fitness[i-1],fitness[i]) for i in 2:length(fitness)]
+solve.(G, b)
+```
+This tells us that $V(R|R) <V(W|R)$ whenever $b > k$, and the other 2 conditions hold as long as $k$ is positive.
+
+Next, we need to show that there is a stable internal equilibrium at 
+$$
+\hat{p} = \frac{k}{2b - k}
+$$
+where $p$ is the frequency of Rest.
+
+At equilibrium $W(R) = W(W)$. Thus
+```math
+\begin{align*}
+V(R|R)p + V(R|W)(1-p) & = V(W|R)p + V(W|W)(1-p)\\
+(0)p + b(1-p) & = (b-k)p + (b- k/2)(1-p)\\
+b - bp & = bp-kp + b- k/2 -bp + pk/2\\
+ - bp & = -kp - k/2  + pk/2\\
+ pk - pk/2 - bp & =  - k/2\\
+ p(k/2 - b) & =  - k/2\\
+ p(2b - k) & =   k\\
+ \hat{p} & =   \frac{k}{(2b - k)}\\
+\end{align*}
+```
+
+We can do the same in Symbolic, using our payoff table.
+```julia
+@variables b k p
+payoffTable = [0 b 
+                b-k b-k/2]
+eq = Symbolics.solve_for(V(R,R)*p + V(R,W)*(1-p) ~ V(W,R)*p + V(W,W)*(1-p),p)
+latexify(Symbolics.expand(eq))
+```
+Pretty close to the expression from the book. It is clear from the payoff table that either 
+strategy can invade rom rare. Thus, the equilibria at $p = 0$ and $p = 1$ are unstable and the unique 
+internal equlibrium is stable. 
+
+Next we include a third strategy called Spiteful, which washes whenever it's partner washes. 
+Two Spitefuls will both wash when they meet. We are to show that Spiteful is an ESS against Rest given $b > k$ but 
+never against Wash. And that Spiteful cannot invade a Rest/Wash equilibrium unless $k < 0$.
+
+The new payoffs are
+
+```julia
+latexify(["" "Rest" "Wash" "Spiteful"
+"Rest" 0 "b" 0
+ "Wash"   "b-k" "b-k/2" "b-k/2"
+ "Spiteful" 0 "b-k/2" "b-k/2"])
+```
+In a world of spiteful individuals $W(S) = b - \frac{k}{2}$, while $W(R) = 0$. Thus, Spiteful is 
+an ESS if $b - \frac{k}{2} >0 \implies b > \frac{k}{2}$ which clearly holds when $b > k$. But Spiteful 
+and Wash will always have the same fitness as eachother in a Spiteful world, regardles of $k$ or $b$. So Spiteful is 
+not an ESS, as Wash can drift in.
+
+The mixed Wash/Rest equilibrium is at $\hat{p} =   \frac{k}{(2b - k)}$. 
+```math
+\begin{align*}
+W(R) & = V(R|R)\hat{p} + V(R|W)(1-\hat{p}) \\
+& =  b(1-\hat{p}) \implies W(W) = b(1-\hat{p})
+\end{align*}
+```
+Whereas
+```math
+\begin{align*}
+W(S) & = (0) \hat{p} + (b - \frac{k}{2})(1-\hat{p})\\
+ & = (0) \hat{p} + (b - \frac{k}{2})(1-\hat{p}).
+\end{align*}
+```
+So Spiteful can invade when $b - \frac{k}{2})(1-\hat{p}) > b(1-\hat{p})$ i.e.
+```math
+\begin{align*}
+(b - \frac{k}{2})(1-\hat{p}) & > b(1-\hat{p})\\
+b - \frac{k}{2} & > b\\
+ \frac{k}{2} & < 0
+\end{align*}
+```
+
+# Display costs
+
+Next we reconsider the Hawk Dove game, but drop the assumption that there's no cost to resolving conflicts. we encorporate display 
+costs into the model such that Doves pay $d/2$ when they interact. Assume that $0 \leq d \leq v$.
+
+The payoff matrix is now 
+
+```julia
+latexify(["" "Hawk" "Dove"
+"Hawk" "(v-c)/2" "v "
+ "Dove"   0 "(v-d)/2"])
+```
+
+In Dove Land $W(D) = \frac{v-d}{2}$  and $W(H) = v$. Dove can only be an ESS if
+```math
+\begin{align*}
+\frac{v-d}{2} & > v\\
+v-d & > 2v\\
+d & < -v
+\end{align*}
+```
+Since $d$ and $v$ are both non-negative, Dove callot be an ESS.
+
+In Hawk world $W(D) = 0$  and $W(H) = \frac{v-c}{2}$#. Hawk is an ESS if
+```math
+\begin{align*}
+\frac{v-c}{2} &> 0\\
+v &> c 
+\end{align*}
+```
+Again, Hawk is not an ESS, since we are interested in cases where $c > v$.
+
+Next we are to show that there exists a mixed equilibrium, wher the frequency of Hawks is 
+$$
+\hat{q} = \frac{v+d}{c+d}
+$$
+At equilibrium 
+```math
+\begin{align*}
+q\frac{v-c}{2} +(1-q)v & = q(0) + (1-q)\frac{v-d}{2}\\
+q(v-c) +(1-q)2v & =  (1-q)(v-d)\\
+q(v-c) +(1-q)2v & =  (1-q)(v-d)\\
+qv - qc +2v - 2qv & = v -d -qv +qd\\
+ - qc +v  & =  -d  +qd\\
+  v +d  & =   q(c +d)\\
+  \hat{q}  & =   \frac{v+d}{c+d}
+\end{align*}
+```
+Or, using Symbolics
+```julia
+@variables q v c d
+eq = q*(v-c)/2 +(1-q)*v ~ q*0 + (1-q)*(v-d)/2
+latexify(expand(Symbolics.solve_for(eq,q)))
+```
+Kind of a weird expression. Definitely not what a human would come up with.
+
+# More display costs
+
+Now we add the Bourgeois strategy to the above game, assuming $d = v$. 
+```math
+\begin{align*}
+V(B|H) & = \frac{1}{2}(0) + \frac{1}{2}(v-c)/2\\
+& =  \frac{v-c}{4}\\
+V(B|D) & = \frac{1}{2}(0) + \frac{1}{2}v\\
+ & =  \frac{v}{2}\\
+ V(B|B) & = \frac{1}{2}(0) + \frac{1}{2}v\\
+ & = \frac{v}{2}
+\end{align*}
+```
+
+The new payoff matrix is 
+
+```julia
+latexify(["" "Hawk" "Dove" "Bourgeois"
+"Hawk" "(v-c)/2" "v " "v/2 + (v-c)/4"
+ "Dove"   0 0 0
+ "Bourgeois" "(3-v)/4])
+```
+
