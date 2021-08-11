@@ -207,7 +207,7 @@ end
 Now we can define a function to run simulations and return an array of final symbiont prevalence.
 
 ```julia
-function run_sim(nHost,nSim, t =1000.0)
+function run_sim(nHost,nSim, t =5000.0)
     prob = DiscreteProblem(multi,rand(nHost),(0.0,t), #this will be remade with new values each iteration
     p = [rand(nHost),rand(nHost),rand(nHost,nHost),nHost])
     data = Array{Float64}(undef,nSim*(nHost+1),nHost +2) # creating an empty array and filling it is faster 
