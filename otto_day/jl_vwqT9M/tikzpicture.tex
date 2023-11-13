@@ -1,0 +1,13 @@
+\documentclass[tikz]{standalone}
+\usepackage{skull}
+\begin{document}
+\begin{tikzpicture}[]
+  \def\Radius{1cm}
+  %\draw  (0cm,0cm) circle[radius=\Radius] node {People without flu $s(t)$};
+  \node(s)[thick, circle, align = center, draw = black] (0,0) { People \\ without flu \\ $s(t)$};
+  \node(d) (3cm,-3cm) {$\skull$};
+  \draw[->] (s) to (d);
+
+\end{tikzpicture}
+
+\end{document}

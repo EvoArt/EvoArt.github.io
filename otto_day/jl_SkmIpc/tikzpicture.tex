@@ -1,0 +1,17 @@
+\documentclass[tikz]{standalone}
+\usepackage{skull} 
+ \usetikzlibrary{arrows.meta} 
+ \usetikzlibrary{positioning}
+\begin{document}
+\begin{tikzpicture}[]
+  \def\Radius{1cm}
+  \node (n)[thick, circle, align = center, draw = black] at (0,0) { Number of \\ mice \\ $n(t)$};
+  \node[below right = of n] (d) {$\skull$};
+  \node[left = of n] (neighbours){};
+    \draw[thick, ->] (neighbours) -- node[above]{$m$} ++ (n);
+    \draw[thick, ->] (n) -- node[sloped,above]{$d \, n(t)$} ++ (d);
+    \path [thick, ->] (n) edge [loop above right] node[right] {$b \, n'(t)$} (n);
+
+\end{tikzpicture}
+
+\end{document}

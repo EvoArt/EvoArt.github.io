@@ -1,0 +1,15 @@
+\documentclass[tikz]{standalone}
+\usepackage{skull} 
+ \usetikzlibrary{arrows.meta}
+\begin{document}
+\begin{tikzpicture}[]
+  \def\Radius{1cm}
+  %\draw  (0cm,0cm) circle[radius=\Radius] node {People without flu $s(t)$};
+  \node (s)[thick, circle, align = center, draw = black] at (0,0) { People \\ without flu \\ $s(t)$};
+  \node[below right = of s] (d){$\skull$};
+    \draw[thick, -{Latex[length=0.2cm, width=0.2cm]}] (s) -- (d);
+    \path [thick, -{Latex[length=0.2cm, width=0.2cm]}] (s) edge [loop above] node {Births} (s);
+
+\end{tikzpicture}
+
+\end{document}

@@ -1,0 +1,25 @@
+\documentclass[tikz]{standalone}
+\usepackage{skull} 
+ \usetikzlibrary{arrows.meta}
+\begin{document}
+\begin{tikzpicture}[]
+    \draw[help lines] (-2,-2) grid (2,2);
+    \node (0) {origin};
+    \node[right=of 0] {right};
+    \node[below right=of 0] {below right};
+    \node[below=of 0] {below};
+    \node[below left=of 0] {below left};
+    \node[left=of 0] {left};
+    \node[above left=of 0] {above left};
+    \node[above=of 0] {above};
+    \node[above right=of 0] {above right};
+  \def\Radius{1cm}
+  %\draw  (0cm,0cm) circle[radius=\Radius] node {People without flu $s(t)$};
+  \node (s)[thick, circle, align = center, draw = black] at (0,0) { People \\ without flu \\ $s(t)$};
+  \node (d) at (3cm,-3cm) {$\skull$};
+    \draw[thick, -{Latex[length=0.2cm, width=0.2cm]}] (s) -- (d);
+    \path [thick, -{Latex[length=0.2cm, width=0.2cm]}] (s) edge [loop above] node {Births} (s);
+
+\end{tikzpicture}
+
+\end{document}

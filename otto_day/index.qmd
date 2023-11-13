@@ -1,0 +1,5 @@
+---
+title: "Overview"
+---
+
+This is a modern classic textbook and reference for ecologists and evolutionary biologists aiming to gain a better understanding of mathematical modeling. The book is focussed on getting biologists up to speed, so emphasis is on learning how to use various techniques, rather than on theorem proving etc.. To that end, there are several excellent primers on the maths needed for the main text. Where computer code is needed, the authors use [Mathematica](https://www.wolfram.com/mathematica/), which is an excellent and intuitive framework for numerical and especially symbolic computations. However, it is not cheap, unless your institution/organisation provides you with a license! Here, I will use a [FOSS](https://en.wikipedia.org/wiki/Free_and_open-source_software) alternative [Julia](https://julialang.org/) which is excellent for numerical work. Since this website is just a collection of of [Quarto](https://quarto.org/) notebooks, each page in this section should be runnable, if you have Quarto and Julia installed [(and configured correctly!)](https://quarto.org/docs/computations/julia.html#installation).

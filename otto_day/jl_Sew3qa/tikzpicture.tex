@@ -1,0 +1,13 @@
+\documentclass[tikz]{standalone}
+\usepackage{skull} 
+  \usetikzlibrary{positioning}
+\begin{document}
+\begin{tikzpicture}[]
+  \node (s)[thick, circle, align = center, draw = black] at (0,0) {People \\ without flu \\ $s(t)$};
+  \node (s)[right = of s, thick, circle, align = center, draw = black] at (0,0) {People \\ with flu \\ $n(t)$};
+  \draw[thick, ->] (s) -- node[below, align = right]{$a \, c \, s(t) \, n(t)$} ++ (n);
+  %\draw [thick, ->] (n) edge [out=60,in=30,looseness=4] node[below right,label={[xshift=0.4cm, yshift=-0.9cm]$b \, n'(t)$}] {} (n);
+
+\end{tikzpicture}
+
+\end{document}

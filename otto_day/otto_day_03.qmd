@@ -1,0 +1,76 @@
+---
+title: "3. Deriving Classical Models"
+jupyter: julia-1.7
+execute: 
+  daemon: true
+  enabled: true
+---
+
+
+This chapter was mostly about applying techniques from the previous chapter to derive and to understand important ecological and evolutionary models. That said, one important tool that is introduced is the mating table. Here we will run through a short example of how to produce a mating table programmatically, using symbolic computing. Then we'll get the governing equations of our system from the mating table and visualise the results for a specific set of parameter values.
+
+First we declare the variables we will use and create two `Dict`s, one linking allele type to allele frequency, and the other linking genotype to fitness function.
+```{julia}
+using DataFrames, Latexify, Symbolics, LaTeXStrings, CairoMakie
+@variables p q Wᴬᴬ Wᴬᵃ Wᵃᵃ W̄ 
+freq = Dict("A" => p, "a" => q)
+W =  Dict("AA" => Wᴬᴬ, "Aa" => Wᴬᵃ, "aA" => Wᴬᵃ, "aa" => Wᵃᵃ)
+```
+
+Next we need to create vectors of values that we will use to populate the mating table. `self` and `other` are just `String` representations of the different alleles.  
+```{julia}
+self = ["A","A","a","a"]
+other = ["A","a","A","a"]
+uniting =  self .* " × " .* other
+```
+For the next columns we will use vector comprehensions to build vectors of expressions by multiplying symbolic variables, which we  look up in the `Dict`s we made before.
+```{julia}
+freq_before = [freq[self[i]] * freq[other[i]] for i in 1:4]
+freq_weighted = freq_before .* [W[self[i]*other[i]] for i in 1:4]
+freq_after = freq_before .* [W[self[i]*other[i]]/W̄ for i in 1:4]
+```
+Then, we can get the proportions of each allele produced by summing the number of occurrences of "A".
+```{julia}
+A = [sum([self[i],other[i]] .=="A") for i in 1:4] .//2
+a = 1 .- A
+```
+Lastly, we combine and name our columns in a `DataFrame`. 
+[We only need to convert `uniting` to `LaTeXString`s because otherwise when we `latexify` `matingTable`, an attempt is made to actually multiply `self` by `other`.]{.aside}
+```{julia}
+matingTable = DataFrame([LaTeXString.(uniting),freq_before,freq_weighted,freq_after,A,a],
+                        ["Uniting Gametes","Freq. before selection","Freq. weighted by fitness", "Freq. after selection","A","a"])
+```
+
+Hmmm... Could be  bit prettier...
+```{julia}
+latexify(matingTable)
+```
+
+Nice. So now lets use the table to generate a model of the dynamics of alleles $p$ and $q$. First we multiply the the frequencies after selection by the proportions of A gametes produced and sum over rows.
+
+```{julia}
+pₜ₊₁ = sum(matingTable[:,"A"] .* matingTable[:,"Freq. after selection"])
+```
+
+Next lets substitute in some fitness values and build our recursion function.
+```{julia}
+Wᴬᴬ, Wᴬᵃ, Wᵃᵃ = 1.2, 1.7, 1.0 # heterozygote advantage
+pₜ₊₁ = substitute(pₜ₊₁, [Wᴬᴬ => Wᴬᴬ, Wᴬᵃ => Wᴬᵃ])
+p_func = eval(build_function(pₜ₊₁,p, q, W̄))
+```
+Okay, so now we need to pick initial values for $p$ and $q$ and define a `W̄` function. We will do the latter inside of a `let` block as we cant otherwise redefine the variable `W̄` as a function. Then we just run through a loop repeatedly solving the recursion equation, and plot the results.
+```{julia}
+p = [0.1] # ⟹ q = [0.9]
+let W̄(p,q) = p^2*Wᴬᴬ + 2p*q*Wᴬᵃ + q^2*Wᵃᵃ
+  for i in 1:30
+    push!(p,p_func(p[end], 1 - p[end], W̄(p[end],1 - p[end])))
+  end
+  fig, ax, plt = lines(0:30, p,label = L"p(t)")
+  lines!(0:30, 1 .- p, label = L"q(t)")
+  ax.xlabel = "t"
+  ax.ylabel = "Allele frequency"
+  axislegend(ax)
+  fig
+end
+```
+

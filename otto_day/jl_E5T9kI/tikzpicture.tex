@@ -1,0 +1,14 @@
+\documentclass[tikz]{standalone}
+\usepackage{skull} 
+  \usetikzlibrary{positioning}
+\begin{document}
+\begin{tikzpicture}[]
+  \node (s)[thick, circle, align = center, draw = black] at (0,0) {People \\ without flu \\ $s(t)$};
+  \node (midway)[right = of s, label = {[ xshift = 0.0cm, yshift = -0.5cm]$a \, c \, s(t) \, n(t)$}]{};
+  \node (n)[right = of midway, thick, circle, align = center, draw = black] {People \\ with flu \\ $n(t)$};
+  \draw[thick, ->] (s) --  (n);
+  \path [->,draw,thick, dashed] (n) to[out=90,in=150, distance=2cm] (midway);
+
+\end{tikzpicture}
+
+\end{document}

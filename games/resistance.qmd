@@ -1,0 +1,48 @@
+---
+title: "Resistance"
+---
+
+## Learning outcomes
+
+[This game](https://evoart.itch.io/resistance) is intended to accompany a lesson teaching young children some basic concepts about bacteria and antibiotics:
+
+-   Many of the bacteria in our bodies are actually good for us.
+
+-   Antibiotics are a very powerful tool for dealing with harmful bacterial infections.
+
+-   Using antibiotics when they are not needed can lead to antibiotic resistance. Meaning that antibiotic treatments may be inefective when we need them most.
+
+## Premise
+
+You are being sent on a special mission to help look after a patient recovering from a recent surgery. You will be shrunk down to microscopic size (too small to see with just your eyes!) so that you can pilot a special medical nanoship. Your mission is to pilot the ship through the patients' bloodstream, destroying any harmful bacteria you come across. But be careful! Many bacteria are incredibly useful for human health, so we don't want to kill these helpful bacteria. You wouldn't be able to tell good from bad just by looking at them, so to make things easier, any harmful bacteria will appear red and angry in your display, while the helpful ones will look green and peaceful. 
+
+There are two ways you can destroy the bacteria you encounter. One is to use your laser cannon. The other is to use antibiotics. Antibiotics are an incredibly important type of medicine. They can be very effective for treating bacterial infections. However, some bacteria have special ways of surviving antibiotics. This is called **antibiotic resistance**. When antibiotics kill off lots of bacteria, the resistant ones are able to grow quickly and take their place. They pass on their resistance to their offspring and even to other bacteria that they are not related to.
+
+Our hope is that you will be able to kill off an infection of harmful bacteria if one arrives. So be careful not to use antibiotics when they are not needed, or you may find yourself facing lots of harmful, resistant bacteria! When using your lasers, remember that you only want to shoot the harmful bacteria. Letting them escape will harm the patient, but so will shooting the helpful bacteria. To help remind you of this, we have set up a scoring system: you get 100 points for shooting down a harmful bacterium and lose 50 points for destroying a helpful bacterium.
+
+## Gameplay
+
+### Use the **arrow keys** to move in the desired direction. 
+
+Crashing into bacteria will end the game.
+
+### The **space bar** fires lasers.
+
+Two shots will kill a harmful bacterium, and one shot will kill a helpful bacterium. **Killing the helpful bacteria harms the patient.**
+
+### The **Enter** button releases antibiotics.
+
+This kills all bacteria currently in view, but also increases the amount of antibiotic resistance.
+
+## Display
+
+On the top right of the screen, a pill icon shows the current effectiveness of antibiotics. **The more greyed out the pill, the more bacteria will be resistant to you antibiotics!**
+
+The patient is also shown in the bottom right. His health is reduced whenever harmful bacteria escape or helpful bacteria are killed. **The game ends if the patient gets too sick (when the patient icon is completely grey)!**
+
+On the top left is the players' current score: 100 points for shooting a harmful bacteria; -50 for shooting a helpful bacteria.
+
+
+# Play the game
+
+The game is freely available online [here](https://evoart.itch.io/resistance).

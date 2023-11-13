@@ -1,0 +1,20 @@
+---
+title: "admin"
+jupyter: julia-1.7
+execute: 
+  enabled: true
+  auto-play-media: true
+format:
+  html:
+    code-fold: true
+    code-tools: true
+---
+
+Shift files around for doc deploy
+
+```{julia}
+using GLMakie, FileIO
+
+img = load("./media/spcow.jpg")
+save("./docs/spcow.jpg",img)
+```

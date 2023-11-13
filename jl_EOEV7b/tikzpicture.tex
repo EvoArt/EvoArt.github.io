@@ -1,0 +1,15 @@
+\documentclass[tikz]{standalone}
+\usetikzlibrary{positioning}
+\begin{document}
+\begin{tikzpicture}[]
+  \node (s)[thick, circle, minimum size=2.4cm, align = center, draw = black] at (0,0) {People \\ without flu \\ $s(t)$};
+  \node (midway)[label={[xshift= 1.0cm, yshift=-0.8cm]$a \, c \, s(t) \, n(t)$}] at (2.5cm,0cm) {};
+  \node (n)[ thick, circle, minimum size=2.4cm, align = center, draw = black] at (6cm,0cm) {People \\ with flu \\ $n(t)$};
+  \draw[thick, ->] (s) --  (n);
+  \path [->,draw,thick, dashed] (n) to[out=90,in=150, distance=2cm] (midway);
+  \node(r)[thick, circle, minimum size=2.4cm, align = center, draw = black] at (2.5,-5) {Recovered \\ and immune \\ $r(t)$};
+  \draw[thick, ->] (n) -- \node[above]{$n(t)$} ++ (r);
+
+\end{tikzpicture}
+
+\end{document}

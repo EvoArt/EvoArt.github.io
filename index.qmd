@@ -1,0 +1,13 @@
+---
+title: "Arthur Newbury"
+about:
+  template: jolla
+  image: spcow.jpg
+  links:
+    - icon: github
+      text: Github
+      href: https://github.com/EvoArt/
+    - icon: google
+      text: Google Scholar
+      href: https://scholar.google.com/citations?user=DKU2CVUAAAAJ&hl=en
+---

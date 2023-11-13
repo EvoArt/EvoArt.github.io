@@ -1,0 +1,387 @@
+---
+title: "1. Mathematical Modelling in Biology"
+jupyter: julia-1.7
+execute: 
+  daemon: true
+  enabled: true
+---
+```{julia} 
+#| echo: false
+using JSServe, Markdown, Observables
+Page(exportable=true, offline=true)
+```
+
+```{julia}
+#| output: false
+#| echo: false
+using  WGLMakie, Random
+WGLMakie.activate!()
+Random.seed!(1)
+```
+> Science will progress faster and further by a marriage of mathematical and empirical biology. This marriage will be even more successful if more biologists can use math, when needed, to advance their own research goals.
+
+### Intro 
+
+This chapter serves as a motivational one, highlighting the importance and usefulness of mathematical modelling in biology. To be fair, this is not a small book, and I'd be surprised if many biologists got as far as picking it up, without already being fairly motivated!. They start by discussing the sheer number of published articles using mathematical models of some kind (@tbl-mod), and the ability of models to say a lot, with only an handful of symbols (you will of course need to read the book if you want to hear what this models are saying). The meat of the chapter takes the form of a case study of the role of mathematical modelling in understanding/predicting trajectories in the HIV/AIDS epidemic. This is put forward as a clear example of a hugely important application, and one where models have been essential in producing testable predictions and generating forecasts for use in prevention and healthcare interventions. I'm going to briefly mention 3 of the examples mentioned in the book. I won't really go into the how's or why's of the maths, as we haven't covered any of that in the book yet. Instead I'll share code examples of how we can recreate (or expand upon) figures presented in the book and the associated primary literature, to show what we will be able to do once we've progressed and started developing our own models. 
+
+:::{.callout-note}
+This page (unlike most others in the site) requires WebGL in order to view the visualisations. If you are using the Safri browser, you may have to [enable WebGL](https://discussions.apple.com/.thread/8655829)
+:::
+
+```{julia}
+#| tbl-cap: "Use of mathematical models in journal articles"
+#| label: tbl-mod
+#| echo: false
+ENV["COLUMNS"]=120
+using PrettyTables
+
+pretty_table(hcat(["American Naturalist", "Ecology", "Evolution"],
+                [105,274,231],
+                ["96%", "100%", "100%"],
+                ["59%", "35%","35%"],
+                ["58%","38%","33%"]),
+                backend = Val(:html),
+                header =(["Journal (in 2001)","Number of articles" ,
+                "Genral use of models", "Specific use of models", "Equations Presented"],))
+```
+
+### Dynamics of HIV After Initial Infection
+
+Here the authors discuss a [paper by Andrew Phillips (1996)](https://www.jstor.org/stable/2890152) which used a mathematical model to show that it is at least **plausible** that the drop off in the number of virions in a patient (following an early peak) is a simple consequence of a decline in the number of the particular cells (CD4+ T cells) that HIV infects. Previously it was assumed that this drop off was due to immune response. However, by modelling the dynamics of immune cells and HIV virions **without** any change in immune response, Phillips showed that it is possible to see the same pattern of early peak followed by decline, based solely on the population dynamics of virions and immune cells.
+
+The model includes uninfected CD4 lymphocytes ($R$), latently infected cells ($L$), actively infected cells ($E$), and free virions ($V$). Activated, uninfected CD4 lymphocytes arise at a constant rate $\Gamma_{\tau}$ and they are removed by HIV-independent death at rate $\mu$, or by infection at rate 
+$\beta V$.
+
+$$
+\frac{d R}{d t}=\Gamma \tau-\mu R-\beta R V
+$$
+
+Upon infection, a proportion $p$ of cells become latently infected, and are removed by HIV-independent cell death or by activation at rate $\alpha$
+$$
+\frac{d L}{d t}=p \beta R V-\mu L-\alpha L
+$$
+
+Actively infected cells are generated immediately after infection or from the activation of latently infected cells before they die at rate $\delta$
+$$
+\frac{d E}{d t}=(1-p) \beta R V+\alpha L-\delta E
+$$
+Free virions are produced at rate $\pi$ by actively infected cells and removed at rate $\sigma$
+$$
+\frac{d V}{d t}=\pi E-\sigma V
+$$
+And the total number of CD4 lymphocytes is 
+$$
+1000(1 - \tau) + R + L + E
+$$
+
+Given these equations and the parameter values and starting densities in the paper, we can recreate Figure 1.5 form the book. In fact we'll go one better and reproduce Figure 1 A from the paper, which additionally includes the number of CD4 cells with a different y-axis scale from the number of virions.
+
+First we list the parameter values from the paper, and collect them in a vector.
+```{julia}
+#| output: false
+Γ = 1.36
+μ = 1.36e-3
+τ = 0.2 
+β = 0.00027
+p = 0.1 
+α = 3.6e-2
+σ = 2 
+δ = 0.33
+π = 100
+P = [Γ, μ, τ, β, p, α, σ, δ, π]
+```
+Next we define our system of equations within a function.
+```{julia}
+#| output: false
+using DifferentialEquations
+# Define a differential equation function
+function phillips₉₆(du,u,P,t)
+    Γ, μ, τ, β, p, α, σ, δ, π = P # Unpack the parameters
+    R, L, E, V = u[1:4]           # Unpack the variables
+
+    du[1] = Γ*τ - μ*R - β*R*V     #dR/dt
+    du[2] = p*β*R*V -μ*L - α*L    #dL/dt
+    du[3] = (1-p)β*R*V + α*L -δ*E #dE/dt
+    du[4] = π*E - σ*V             #dV/dt
+end
+```
+Now we have our function and our parameter values, all we need are initial values for the variables (I've taken these from the paper also) and a timespan we are interested in. 
+
+:::{.callout-note}
+When implementing someone else' model take care with the timespan. Here the author of the paper state that their rate parameters are rates of change *per day*. Thus, the first 120 days is t = 0 to t = 120, but that won't always be the case.
+:::
+
+
+```{julia}
+#| output: false
+# Define and ordinary differential equation problem
+prob = ODEProblem(phillips₉₆,            # Function
+                  [200.0,0.0,0.0,4e-7],  # Variables inital values
+                  (0.0,120),             # Time span
+                  P)                     # Parameter values
+
+# Solve the problem 
+sol = solve(prob,              # The ODEProblem defined above
+            reltol = 0.5e-9,    # Decreased "relative tolerance" as default value
+                               # led to slight innacuracy towards end of simulation
+            saveat = 1)        # Store a point at each interger value of t, for plotting 
+```
+
+Now we are ready to plot. Notice in the code above I manually set the `reltol` argument in the `solve` function. I only realised that I had to do this because I had a reference output, i.e. my plot did not match the plot from the paper until I lowered `reltol`. Figure 1 A from the paper has two lines with different y-axis scales, so I thought it would be nice to show one approach to achieving this in Julia using the [Makie](https://docs.makie.org/stable/) plotting library. 
+```{julia}
+#| output: false
+#| echo: false
+#using CairoMakie
+#CairoMakie.activate!()
+```
+```{julia}
+#| fig-cap: "Phillips 1996"
+#| label: fig-phillips96
+using WGLMakie
+s = Array(sol)'                
+fig = Figure()
+ax1 = Axis(fig[1,1],xticks = 0:30:120, 
+           xgridvisible = false, ygridvisible = false,
+           xlabel = "days", ylabel = "lymphocytes")
+ax2 = Axis(fig[1,1],yaxisposition = :right, 
+           xgridvisible = false, ygridvisible = false,
+           ylabel = "virions")
+lines!(ax1,(1000(1 - τ) .+ s[:,1] .+ s[:,2] .+ s[:,3])[1:end], 
+        color = :black)
+lines!(ax2,log10.(s[:,4]), color = :black)                     
+ax2.yticks = (log10.([0.1,1,10,100,1000,10000]),              
+              string.([0.1,1,10,100,1000,10000]))            
+ylims!(ax2,(-1,log10(10000)))
+ylims!(ax1,0.0,1200)
+hidexdecorations!(ax2)
+text!(ax1, "CD4 lymphocytes", position = (45,825))
+text!(ax2, "Cell-free virus", position = (40,1))
+fig
+```
+
+### The Effects of Antiretroviral Therapy on the Spread of HIV
+
+In the next [paper Blower et al. (2000)](https://www.science.org/doi/10.1126/science.287.5453.650) try to assign probabilities to the range of possible outcomes following the introduction of antiretroviral therapies (ART). Essentially, ART was such a huge step forward in treating HIV that it could (indeed did) lead to an increase in "risky" behaviour (see unprotected sex). The model in this paper then sought to predict the possible fate of the gay community in San Francisco for a range of parameter values pertaining to infection rates, effectiveness of ART etc. but also the increase in risky behaviour caused by the existence of ART. This was a nice example of thoroughly investigating a broad parameter space, and of providing honest, probabilistic answers rather than overconfident point estimates. Moreover, it was a clever (and important!) touch to model changes in behaviour alongside physiological processes. 
+
+In the book, they present a simplified version of the model (see Box 2.5 in the next chapter) and they show in Figure 1.6 how the impact of ART can vary with it's associated increase in risk behaviour $i$. Since this is a digital resource, we can go one better and make an interactive plot. Don't worry too much about the code for for the equations as this is much the same procedure as above.
+
+```{julia}
+#| output: false
+#| code-fold: true
+# parameter values from the paper
+π = 2133
+μ = 1/30
+c = 1.7
+βᵤ = 0.1
+βₜ = 0.025
+σ = 0.5
+g = 0.05
+νᵤ = 1/12
+νₜ = 1/27
+function blower₀₀(du,u,P,t)
+    π, μ,c, βᵤ, βₜ, σ, g, νᵤ, νₜ, i = P
+    X, Yᵤ, Yₜ = u
+    λ = (βᵤ*Yᵤ + βₜ*Yₜ)/(X + Yᵤ + Yₜ)
+
+    du[1] = π - c*(1 + i)λ*X - μ*X
+    du[2] = c*(1 + i)λ*X + g*Yₜ - σ*Yᵤ - μ*Yᵤ - νᵤ*Yᵤ
+    du[3] = σ*Yᵤ - g*Yₜ - μ*Yₜ - νₜ*Yₜ
+end
+```
+
+We will need some derived quantities for this. To get the cumulative number of AIDS related deaths, we will numerically integrate the ODE solution over the relevant timespan to get the number of infected individuals receiving ART and those not, and then multiply by their respective death rates. We compare the number of deaths for a given set of parameter values with the number of deaths without ART i.e. when the rate at which people begin treatment $\sigma$ and the increase in risky behaviour $i$ both = 0.
+```{julia}
+#| output: false
+#| code-fold: true
+using QuadGK
+
+function deaths(sol,t, νᵤ = 1/12, νₜ = 1/27)
+    AUC, err = quadgk(sol, 0, t)
+    AUC[2]νᵤ +AUC[3]νₜ
+end
+
+function get_z(i, tmax = 10, tmin = 1, step = 1)
+    P = [π, μ,c, βᵤ, βₜ, σ, g, νᵤ, νₜ, i]
+    prob = ODEProblem(blower₀₀, 
+        [0.7,0.3,0.0] .*40000,  
+        (0.0,10),
+        P)  
+    sol = solve(prob)
+    ARTdeaths = [deaths(sol,t) for t in tmin:step:tmax]
+    P = [π, μ,c, βᵤ, βₜ, 0, g, νᵤ, νₜ, 0]
+    prob = ODEProblem(blower₀₀, 
+        [0.7,0.3,0.0] .*40000, 
+        (0.0,10),
+        P)  
+    sol = solve(prob)
+    NULLdeaths = [deaths(sol,t) for t in tmin:step:tmax]
+    z =  ARTdeaths ./ NULLdeaths 
+    vcat(0,(1 .- z)*100) # zero at the begining, for plotting purposes
+end
+```
+
+Now we are ready to plot.
+
+::: {.panel-tabset}
+
+## Local
+
+How I would make an interactive plot for personal use.
+
+```{.julia}
+using GLMakie
+fig = Figure()
+ax = Axis(fig[1, 1], xlabel = "Years", 
+          ylabel = "Percent of AIDS deaths averted",
+          xticks = 2:2:10, xgridvisible = false, ygridvisible = false)
+# Create a slider widget
+i_slider = Slider(fig[2,1],range = 0:0.01:3.0)
+# Create a vector 'z' which is the return value from calling
+# get_z() on the slider value
+z = lift(i_slider.value) do i
+    get_z(i)
+end
+lines!(0:10,z, color = :red, linewidth = 5)
+limits!(ax, 0, 10, 0, 50)
+fig
+```
+
+## Online
+
+How I made this one to share online. see [here](https://docs.makie.org/v0.17.13/documentation/backends/wglmakie/index.html) for details.
+
+```{.julia} 
+using JSServe, WGLMakie
+Page(exportable=true, offline=true)
+```
+```{.julia}
+WGLMakie.activate!()
+App() do session::Session
+  fig = Figure()
+  ax = Axis(fig[1, 1], xlabel = "Years", 
+            ylabel = "Percent of AIDS deaths averted",
+            xticks = 2:2:10, xgridvisible = false, ygridvisible = false)
+  # Create a slider widget
+  i_slider = Slider(0:0.01:3.0) 
+  # Create a vector 'z' which is the return value from calling
+  # get_z() on the slider value
+  z = lift(i_slider.value) do i
+      get_z(i)
+  end
+  lines!(0:10,z, color = :red, linewidth = 5)
+  limits!(ax, 0, 10, 0, 50)
+  slider = DOM.div("i: ", i_slider, i_slider.value)
+  return JSServe.record_states(session, DOM.div(slider, fig))
+end
+```
+:::
+
+```{julia}
+#| echo: false
+WGLMakie.activate!()
+App() do session::Session
+  fig = Figure()
+  ax = Axis(fig[1, 1], xlabel = "Years", 
+            ylabel = "Percent of AIDS deaths averted",
+            xticks = 2:2:10, xgridvisible = false, ygridvisible = false)
+  # Create a slider widget
+  i_slider = Slider(0:0.01:3.0) 
+  # Create a vector 'z' which is the return value from calling
+  # get_z() on the slider value
+  z = lift(i_slider.value) do i
+      get_z(i)
+  end
+  lines!(0:10,z, color = :red, linewidth = 5)
+  limits!(ax, 0, 10, 0, 50)
+  slider = DOM.div("i: ", i_slider, i_slider.value)
+  return JSServe.record_states(session, DOM.div(slider, fig))
+end
+```
+
+As we can see, if behavioural changes are too extreme there is predicted to be a net negative effect of ART over the 10 year period! 
+
+### Predicting the Number of New Infections
+
+Continuing the theme of models working together with data, here the authors present a 2001 [paper by Williams et al.](https://doi.org/10.1002/sim.840) which developed a novel model for predicting age-specific risks of contracting HIV from (in some cases very sparse) data on prevalence of HIV. Aside from being a useful contribution, giving people the tools to make targeted decisions about where to focus resources in the battle against HIV/AIDS, they also take a really interesting approach to the maths. Unlike the other models discussed above, this is not system of differential equations but instead they fit a modified log-normal function with well reasoned (backed by evidence shown in the paper) assumptions, parameter values and choices of functions. The authors fit their model to data using maximum likelihood estimation and subsequently estimate confidence intervals by a monte-carlo procedure, all in bespoke Visual Basic code. Thankfully, with modern probabilistic programming languages PPLs like `Turing.jl` now we can fit arbitrarily complex functions to data in easy, human-readable syntax, like so... 
+
+```{.julia}
+@model function hiv(age, tot, pos)
+    # priors
+    N ~ truncated(Cauchy(0,30), lower = 0.0)
+    m ~ truncated(Cauchy(0,30), lower = 0.0)
+    σ ~ Exponential()
+    # transformed variables
+    x = P.(age,N,m,σ)
+    # likelihood
+    pos .~ Binomial.(tot,x)
+end
+```
+where `age`, `tot`, and `pos` are vectors or age groups (age in years) and their corresponding counts of total tested and the number found to be HIV positive. `N`, `m`, `σ ` are parameters to be inferred and `P` is a function to compute the prevalence of HIV (for a given age group at a certain time) given those parameters. Thus, once we have figured out the appropriate functions to model reality (the hard part!) we can do full Bayesian inference and get a decent picture of our uncertainty around not only our parameter values but (more importantly in cases like this) our predictions.  
+```{julia}
+#| echo: false
+#CairoMakie.activate!()
+```
+```{julia}
+#| code-fold: true
+#| warning: false
+using Turing, StatsFuns
+# The data are emebded in a text file that I extracted from the pdf
+# of the paper.
+tbl = split.(readlines("out.txt")[225:260])
+age = parse.(Int, [t[1] for t in tbl])
+tot = parse.(Int, [t[2] for t in tbl])
+pos = parse.(Int, [t[3] for t in tbl])
+obs = parse.(Float64, [t[4] for t in tbl])
+# I'm wrapping everything in a `let` block so I can reassign some
+# previousy used variable names as function names in  the local scope.
+let a₀ = 10.0 
+    π = Base.π # re-assign π it's normal value
+    # Equations from the paper
+    P(t) = logistic(0.372t − 744.6)
+    function μ(â,ã) 
+    d =  â - ã
+    d > 2 ? mort(d -2) : 1.0
+    end
+    mort(diff) = exp(-diff/(7/log(2)))
+    f(a,N,m,σ,t) = R(a,N,m,σ)P(t)
+    R(a,N,m,σ) = a > a₀ ? N/(σ√(2π)*(a-a₀))*exp(-(log(a-a₀) - log(m))^2 /2σ^2) : 0.0
+    s(a,N,m,σ,t = 1998) = exp(-sum(f.(0:a,N,m,σ,t-a:t)))
+    c(a,N,m,σ,t = 1998) = sum( [μ(a,ã)*f(ã,N,m,σ,t-(a-ã))*s(ã,N,m,σ,t-(a-ã)) for ã in 0:a])
+    function P(a,N,M,σ,t = 1998)
+        sₐₜ = s(a,N,M,σ,t)
+        cₐₜ = c(a,N,M,σ,t)
+        cₐₜ/(cₐₜ + sₐₜ)
+    end
+    # Probablistic model
+    @model function hiv(age, tot, pos)
+
+        N ~ truncated(Cauchy(0,30), lower = 0.0)
+        m ~ truncated(Cauchy(0,30), lower = 0.0)
+        σ ~ Exponential()
+
+        x = P.(age,N,m,σ)
+        pos .~ Binomial.(tot,x)
+        # return some generated quatities, to be extracted for plotting
+        return [P.(10:50,N,m,σ,1998), f.(10:50,N,m,σ,1998)]
+    end
+    # Fit model to data using 200 iterations of No U-Turns Sampler (NUTS)
+    hivmod = hiv(age, tot, pos)
+    chn = sample(hivmod, NUTS(), 200)
+    # Extract generated quanities for plotting
+    gens = generated_quantities(hivmod, chn)
+    # Plot
+    fig,ax,plt =scatter(age,obs)
+    lines!.(ax,[hcat(10:50,gen[1]) for gen in gens], color = (:grey,0.1))
+    lines!.(ax,[hcat(10:50,gen[2]) for gen in gens], color = (:red,0.1))
+    text!(ax, "newly infected \"risk\"", position = (18,0.02))
+    text!(ax, "prevalence", position = (30,0.45))
+    ax.xlabel = "Age in years"
+    ax.ylabel = "Proportion of women"
+    hidedecorations!(ax, ticklabels = false, label = false)
+    fig
+end
+```
+
+### Concluding Remarks
+
+For me, this opening chapter really hit the mark. The HIV/AIDS case study was well chosen, since the nature of the infection meant that ecological (population dynamics) and evolutionary (mutation limitation) theory were employed both to understand the plausible range of processes going on during infection and to design treatments against a rapidly evolving antagonist. Thus, I was at once hit with the excitement of scientific discovery (guided by insights gleaned form models) and reminded that immediate and substantial human benefits can be derived from these insights. However, In their concluding message for the chapter Otto & Day also stress the limitations of mathematical modelling. For one, modelling results are only as interesting as the question(s) being asked. This is an obvious but important point. It is easy to become disillusioned when frequently confronted models that seem to have been formulated *just for the sake of it*. They then go on to stress the importance of a “marriage of mathematical and empirical biology”, stating that facilitating this indeed is the purpose of the book. Unfortunately, it is quite common to encounter the disconnect that often (but not always) exists between modelling and data, so I am glad that this is their aim. But as a final remark on the quality of this first chapter, the concluding message was not really needed. The examples presented throughout made it clear how powerful a proper marriage of theory and data can be when done properly and when asking the right questions.

@@ -1,0 +1,27 @@
+---
+title: "(proportions of) Cell Counts"
+jupyter: julia-1.7
+execute: 
+  enabled: true
+  auto-play-media: true
+format:
+  html:
+    code-fold: true
+    code-tools: false
+---
+
+## Motivation
+
+As a microbiologist (of sorts), one thing I do far too much of (or far too little of, depending on whether you're ask me or my supervisor) is plating bacteria on agar plates to count colony forming units (CFUs). The basic idea is to dilute down your bacterial culture to a point where you can spread a small drop of diluted culture across a nutrient rich surface, leave them at a temperature the bacteria like for a day or two, then count the number of colonies that grow to estimate the density of live cells in your culture.
+
+In a recent experiment, a colleague and I wanted to use selective plates to determine the frequency of an antibiotic resistance conferring plasmid [plasmid](https://www.genome.gov/genetics-glossary/Plasmid) in a synthetic microbial community. The idea is to compare colony counts on normal agar plates with the counts from plates laced with antibiotics. The ratio of colonies detected on the selective plates to those found on the normal plates is the proportion of bacterial cells that carry the plasmid. Simple!... Except, not really. In fact we often found more bacteria on the selective plates than the normal ones. Yes, we could publish these ratios of greater than 1 and be those genius scientists who proved unequivocally that antibiotics cause additional bacteria to materialise. But actually what the data show is that even if we had only seen ratios < 1 we should not have just used them as is.
+[This is fairly common. When we see what we expect, we just report the results. But when things look a bit iffy we realise that our whole statistical methodology was flawed all along. The astute among you will see that this can be a huge source of bias!]{.aside} 
+
+## Video proof of correctness of Poisson distribution
+
+## Develop model
+
+## Hierachical version
+
+## Validate model
+

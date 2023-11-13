@@ -1,0 +1,138 @@
+---
+title: "4. Numerical and Graphical Techniques"
+jupyter: julia-1.7
+execute: 
+  daemon: true
+  enabled: true
+---
+
+```{julia} 
+#| echo: false
+using JSServe, Markdown, Observables
+Page(exportable=true, offline=true)
+```
+
+```{julia}
+#| output: false
+#| echo: false
+using  WGLMakie, Random
+WGLMakie.activate!()
+Random.seed!(1)
+```
+```{julia}
+#using  GLMakie
+α = 2/3#1.1 
+β = 4/3#0.4
+δ = 1#0.5
+γ = 1#0.4
+LV(n ::Point2,β) = Point2f(α*n[1] - β*n[1]*n[2], δ*n[1]*n[2]- γ*n[2])
+LV(n1 ,n2) = Point2f(α*n1 - β*n1*n2, δ*n1*n2- γ*n2)
+LV(n,p,t) = [α*n[1] - p[1]*n[1]*n[2], δ*n[1]*n[2]- γ*n[2]]
+
+# Create a vector 'z' which is the return value from calling
+# get_z() on the slider value
+
+CR(n, θ = 1000, c = 0.01, a = 1, ϵ = 0.0005, δ = 0.001) = Point2f((θ - a*c*n[1]*n[2])/3, (ϵ*a*c*n[1]*n[2] - δ*n[2])/3)
+xs = 00:500:20000
+ys = 0:2:60
+points = [Point2f(x,y) for x in xs for y in ys]
+directions = CR.(points)
+ arrows(points,directions)
+
+null1(x) = 1000/(0.01*x)
+lines!(xs,null1.(xs))
+
+null2 = 0.001/(0.0005*0.01)
+vlines!(null2)
+current_figure()
+```
+
+```{julia}
+streamplot(LV,0.0..4.0,0.0..4.0, arrow_size = 15)
+
+```
+
+```{.julia}
+using DifferentialEquations
+
+function traj(beta)
+  prob = ODEProblem(LV,[2,2],(0,100),[beta] )
+  hcat(solve(prob, saveat = 0.1).u...)'
+end
+
+
+ys1 = Observable(rand(20))
+ys2 = Observable(rand(20))
+sf = Observable( Base.Fix2(LV,4.0/3.0))
+
+fig = Figure()
+ax = Axis(fig[1,1])
+ax2 = Axis(fig[1,2])
+ax2.limits =(0, 1000, 0, 12)
+ax2.xticks = (0:100:1000,string.(collect(0:100:1000) ./10))
+sp = streamplot!(
+        ax,
+        sf,
+        0..3, 0..6;
+        linewidth = 2,
+        arrow_size = 15,
+        colormap =:magma
+    )
+    lines!(ax2, ys1)
+    lines!(ax2, ys2)
+
+i_slider = Slider(fig[2,1],range = 0.5:0.01:6.0)
+lift(i_slider.value) do i
+  sf[]=   Base.Fix2(LV,i)
+  y = traj(i)
+  ys1[] = y[:,1]
+  ys2[] = y[:,2]
+end
+```
+
+```{julia}
+using DifferentialEquations
+function traj(beta)
+  prob = ODEProblem(LV,[2,2],(0,100),[beta] )
+  hcat(solve(prob, saveat = 0.1).u...)'
+end
+
+
+
+App() do session::Session
+ys1 = Observable(rand(20))
+ys2 = Observable(rand(20))
+sf = Observable( Base.Fix2(LV,4.0/3.0))
+
+fig = Figure()
+ax = Axis(fig[1,1])
+ax2 = Axis(fig[1,2:3])
+ax.limits =(0, 3, 0, 6)
+ax2.limits =(0, 1000, 0, 12)
+ax2.xticks = (0:100:1000,string.(collect(0:100:1000) ./10))
+
+sp = streamplot!(
+        ax,
+        sf,
+        0..3, 0..6;
+        linewidth = 2,
+        arrow_size = 15,
+        #color =:black,
+        colorrange = (-50,50)
+    )
+    
+    lines!(ax2, ys1, label = "Prey")
+    lines!(ax2, ys2, label = "Predator")
+    fig[2, 4] = Legend(fig, ax2, "Trajectories", framevisible = false)
+
+i_slider = Slider(0.5:0.5:6.0)
+lift(i_slider.value) do i
+  sf[]=   Base.Fix2(LV,i)
+  y = traj(i)
+  ys1[] = y[:,1]
+  ys2[] = y[:,2]
+end
+slider = DOM.div("β: ", i_slider, i_slider.value)
+  return JSServe.record_states(session, DOM.div(slider, fig))
+end
+```
