@@ -1,0 +1,36 @@
+project:
+  type: website
+  output-dir: docs
+
+website:
+  title: "Arthur Newbury"
+  sidebar:
+    style: "docked"
+    search: true
+    contents:
+      - section: "Education Resources"
+        contents: 
+          - section: "Games"
+            contents:
+              - games/resistance.qmd
+      - section: "Books"
+        contents:
+          - section: "Otto and Day"
+            contents:
+              - otto_day/index.qmd
+              - otto_day/otto_day_01.qmd
+              - otto_day/otto_day_02.qmd
+              - otto_day/otto_day_03.qmd
+              - otto_day/otto_day_p1.qmd
+
+
+
+
+format:
+  html:
+    theme: cosmo
+    css: styles.css
+    toc: true
+
+
+
