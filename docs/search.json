@@ -257,5 +257,19 @@
     "title": "Arthur Newbury",
     "section": "",
     "text": "+++ weave = true +++ @def title = “Social evo probs 1”\ninsert_weave _assets/problems-1.jmd"
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Arthur Newbury",
+    "section": "",
+    "text": "I am a biosciences PhD candidate in the Angus Buckling lab at University of Exeter, currently working on microbial community assembly and the formation and maintenance of bacteria-plasmid networks."
+  },
+  {
+    "objectID": "index.html#publications",
+    "href": "index.html#publications",
+    "title": "Arthur Newbury",
+    "section": "Publications",
+    "text": "Publications\n\n\nCastledine, Meaghan, Arthur Newbury, Rai Lewis, Christian Hacker, Sean Meaden, and Angus Buckling. 2023. “Antagonistic Mobile Genetic Elements Can Counteract Each Other’s Effects on Microbial Community Composition.” Mbio 14 (2): e00460–23.\n\n\nNewbury, Arthur, Beth Dawson, Uli Klümper, Elze Hesse, Meaghan Castledine, Colin Fontaine, Angus Buckling, and Dirk Sanders. 2022. “Fitness Effects of Plasmids Shape the Structure of Bacteria–Plasmid Interaction Networks.” Proceedings of the National Academy of Sciences 119 (22): e2118361119.\n\n\nNewbury, Arthur, Bram Kuijper, and Angus Buckling. 2023. “Spatial Structure Drives Compositional Convergence Between Nutrient Environments in Microbial Communities.”"
   }
 ]

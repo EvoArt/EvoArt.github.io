@@ -1,5 +1,8 @@
 ---
 title: "Arthur Newbury"
+bibliography: my_pubs.bib
+nocite: |
+  @*
 about:
   template: jolla
   image: spcow.jpg
@@ -11,3 +14,11 @@ about:
       text: Google Scholar
       href: https://scholar.google.com/citations?user=DKU2CVUAAAAJ&hl=en
 ---
+
+I am a biosciences PhD candidate in the Angus Buckling lab at University of Exeter, currently working on microbial community assembly and the formation and maintenance of bacteria-plasmid networks.
+
+## Publications
+
+::: {#refs}
+:::
+
